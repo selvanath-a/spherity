@@ -38,7 +38,7 @@ export class CryptoService {
      */
     sign(data: unknown, privateKey: string): string {
         const message = this.canonicalize(data);
-        const messageBytes = Buffer.from(message, 'hex');
+        const messageBytes = Buffer.from(message, 'utf8');
         const privateKeyBytes = Buffer.from(privateKey, 'hex');
         const signature = nacl.sign.detached(messageBytes, privateKeyBytes);
         return Buffer.from(signature).toString('hex');
@@ -54,7 +54,7 @@ export class CryptoService {
     verify(data: unknown, signature: string, publicKey: string): boolean {
         try {
             const message = this.canonicalize(data);
-            const messageBytes = Buffer.from(message, 'hex');
+            const messageBytes = Buffer.from(message, 'utf8');
             const signatureBytes = Buffer.from(signature, 'hex');
             const publicKeyBytes = Buffer.from(publicKey, 'hex');
             return nacl.sign.detached.verify(messageBytes, signatureBytes, publicKeyBytes);

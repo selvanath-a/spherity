@@ -145,7 +145,9 @@ export class CredentialService {
             if (!credential.signature) {
                 return { valid: false, reason: 'Missing signature' };
             }
-            const verified = this.issuerService.verify(credential, credential.signature);
+            // Extract signature and verify the remaining credential data
+            const { signature, ...credentialData } = credential;
+            const verified = this.issuerService.verify(credentialData, signature);
             return verified ? { valid: true } : { valid: false, reason: 'Invalid signature' };
         } catch {
             return { valid: false, reason: 'Error during verification' };
