@@ -147,6 +147,37 @@ describe('CredentialService', () => {
       expect(result.valid).toBe(true);
     });
 
+    it('should verify credential with correct signature extraction', async () => {
+      const issuedAt = new Date('2024-01-01');
+      const credential = {
+        id: 'test-id',
+        type: 'TestCredential',
+        issuer: 'did:test:issuer',
+        credentialSubject: 'did:test:subject',
+        claims: { name: 'Alice', age: 30 },
+        issuedAt,
+        signature: 'actual-signature-value',
+      };
+
+      await service.verifyCredential(credential);
+
+      // Verify that issuerService.verify was called with the correct arguments:
+      // 1. Credential data WITHOUT the signature
+      // 2. The signature as a separate argument
+      expect(issuerService.verify).toHaveBeenCalledWith(
+        {
+          id: 'test-id',
+          type: 'TestCredential',
+          issuer: 'did:test:issuer',
+          credentialSubject: 'did:test:subject',
+          claims: { name: 'Alice', age: 30 },
+          issuedAt,
+          // Note: signature is NOT included in the credential data
+        },
+        'actual-signature-value' // signature passed separately
+      );
+    });
+
     it('should return invalid for missing credential', async () => {
       const result = await service.verifyCredential(undefined);
 

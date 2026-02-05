@@ -17,6 +17,7 @@ interface IssueCredentialDTO {
  * All endpoints operate on the wallet identified by the walletId cookie.
  * @route /credential
  */
+//TODO: Create custom decorator for wallet-id
 @Controller('credential')
 export class CredentialController {
     constructor(private readonly credentialService: CredentialService) { }
