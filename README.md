@@ -55,28 +55,71 @@ Users **do not** sign credentials.
 
 ## Credential format
 
+This project uses a minimal **W3C Verifiable Credentials Data Model v2.0** compliant shape.
+
 ```json
 {
-  "id": "uuid",
-  "type": "GymMembershipCard",
-  "issuer": "did:example:issuer",
-  "subject": "did:example:wallet:<walletId>",
-  "claims": {
+  "@context": [
+    "https://www.w3.org/ns/credentials/v2"
+  ],
+  "id": "urn:uuid:123e4567-e89b-12d3-a456-426614174000",
+  "type": [
+    "VerifiableCredential",
+    "GymMembershipCard"
+  ],
+  "issuer": "did:web:issuer.example.com",
+  "validFrom": "2026-01-01T12:00:00Z",
+  "credentialSubject": {
+    "id": "did:key:z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK",
     "level": "Gold"
   },
-  "issuedAt": "2026-01-01T12:00:00Z",
-  "signature": "<hex-ed25519-signature>"
+  "proof": {
+    "type": "DataIntegrityProof",
+    "created": "2026-01-01T12:00:00Z",
+    "proofPurpose": "assertionMethod",
+    "verificationMethod": "did:web:issuer.example.com#key-1",
+    "cryptosuite": "ed25519-2020",
+    "proofValue": "a1b2..."
+  }
 }
 ```
+---
 
-### Field explanation
+## Design Decisions
 
-- **id**: unique credential identifier
-- **type**: human-readable credential category
-- **issuer**: DID of the backend issuer
-- **subject**: DID of the wallet the credential is about
-- **claims**: arbitrary key–value data
-- **issuedAt**: issuance timestamp
-- **signature**: detached Ed25519 signature of the credential payload
+- **Single issuer model**: One global issuer key pair is used for all credentials, stored in `data/issuer-keys.json`.
+- **Wallet identity via cookie**: A browser instance is a wallet, identified by an `httpOnly` `walletId` cookie. No user accounts or auth.
+- **File-based persistence**: Credentials are stored per-wallet as unencrypted JSON files under `data/wallets/` (simple, no DB).
+- **Minimal VC shape**: Uses a reduced W3C VC v2.0-compatible structure for educational clarity.
+- **Proof encoding (hex)**: `proofValue` uses hex rather than multibase to keep crypto handling simple.
+- **Local deletion only**: “Delete” removes the local wallet copy. Real-world revocation however, would be typically achieved through the status mechanism: `credentialStatus`. Not implemented here.
+- **Validation**: Backend uses NestJS DTOs (`class-validator`) for request validation.
+- **Verification method format**: `verificationMethod` uses a DID URL with a `#key-1` fragment to indicate a specific issuer key. In this demo, the DID document isn’t resolved; the fragment is illustrative.
+- **Timing Interceptor**: `timingInterceptor` demonstrates interceptor usage with a minimal response Time logging for each Request.
+- **Throttler Guard**: `ThrottlerGuard` demonstrates Guard usage with global rate limits of **30 requests per minute per IP**.
 
 ---
+
+## Setup (Backend + Frontend)
+
+### Prerequisites
+- Node.js 20+
+- pnpm
+
+### Backend
+```bash
+cd spherity/backend
+pnpm install
+pnpm start:dev
+```
+
+Backend runs on `http://localhost:3001` by default.
+
+### Frontend
+```bash
+cd spherity/frontend
+pnpm install
+pnpm dev
+```
+
+Frontend runs on `http://localhost:3000` by default.

@@ -44,11 +44,14 @@ describe('CredentialService', () => {
 
       const result = await service.issue('test-wallet', 'TestCredential', { name: 'John' });
 
-      expect(result.type).toBe('TestCredential');
+      expect(result.type).toEqual(['VerifiableCredential', 'TestCredential']);
       expect(result.issuer).toBe('did:vc-server:issuer');
-      expect(result.credentialSubject).toBe('did:vc-server:wallet:test-wallet');
-      expect(result.claims).toEqual({ name: 'John' });
-      expect(result.signature).toBe('mock-signature');
+      expect(result.credentialSubject).toEqual({
+        id: 'did:vc-server:wallet:test-wallet',
+        name: 'John',
+      });
+      expect(result.proof.proofValue).toBe('mock-signature');
+      expect(result.proof.cryptosuite).toBe('ed25519-2020');
       expect(issuerService.sign).toHaveBeenCalled();
     });
   });
@@ -67,7 +70,22 @@ describe('CredentialService', () => {
     it('should return credentials from existing wallet', async () => {
       const mockStore = {
         credentials: [
-          { id: '1', type: 'Test', issuer: 'did:test', credentialSubject: 'did:subject', claims: {}, issuedAt: new Date(), signature: 'sig' },
+          {
+            '@context': ['https://www.w3.org/ns/credentials/v2'],
+            id: '1',
+            type: ['VerifiableCredential', 'Test'],
+            issuer: 'did:test',
+            validFrom: '2024-01-01T00:00:00Z',
+            credentialSubject: { id: 'did:subject' },
+            proof: {
+              type: 'DataIntegrityProof',
+              created: '2024-01-01T00:00:00Z',
+              proofPurpose: 'assertionMethod',
+              verificationMethod: 'did:test#key-1',
+              cryptosuite: 'ed25519-2020',
+              proofValue: 'sig',
+            },
+          },
         ],
       };
       mockFs.readFile.mockResolvedValue(JSON.stringify(mockStore));
@@ -83,7 +101,22 @@ describe('CredentialService', () => {
     it('should return credential by id', async () => {
       const mockStore = {
         credentials: [
-          { id: 'cred-1', type: 'Test', issuer: 'did:test', credentialSubject: 'did:subject', claims: {}, issuedAt: new Date(), signature: 'sig' },
+          {
+            '@context': ['https://www.w3.org/ns/credentials/v2'],
+            id: 'cred-1',
+            type: ['VerifiableCredential', 'Test'],
+            issuer: 'did:test',
+            validFrom: '2024-01-01T00:00:00Z',
+            credentialSubject: { id: 'did:subject' },
+            proof: {
+              type: 'DataIntegrityProof',
+              created: '2024-01-01T00:00:00Z',
+              proofPurpose: 'assertionMethod',
+              verificationMethod: 'did:test#key-1',
+              cryptosuite: 'ed25519-2020',
+              proofValue: 'sig',
+            },
+          },
         ],
       };
       mockFs.readFile.mockResolvedValue(JSON.stringify(mockStore));
@@ -107,7 +140,22 @@ describe('CredentialService', () => {
     it('should delete existing credential', async () => {
       const mockStore = {
         credentials: [
-          { id: 'cred-1', type: 'Test', issuer: 'did:test', credentialSubject: 'did:subject', claims: {}, issuedAt: new Date(), signature: 'sig' },
+          {
+            '@context': ['https://www.w3.org/ns/credentials/v2'],
+            id: 'cred-1',
+            type: ['VerifiableCredential', 'Test'],
+            issuer: 'did:test',
+            validFrom: '2024-01-01T00:00:00Z',
+            credentialSubject: { id: 'did:subject' },
+            proof: {
+              type: 'DataIntegrityProof',
+              created: '2024-01-01T00:00:00Z',
+              proofPurpose: 'assertionMethod',
+              verificationMethod: 'did:test#key-1',
+              cryptosuite: 'ed25519-2020',
+              proofValue: 'sig',
+            },
+          },
         ],
       };
       mockFs.readFile.mockResolvedValue(JSON.stringify(mockStore));
@@ -133,13 +181,20 @@ describe('CredentialService', () => {
   describe('verifyCredential', () => {
     it('should return valid for correct signature', async () => {
       const credential = {
+        '@context': ['https://www.w3.org/ns/credentials/v2'],
         id: '1',
-        type: 'Test',
+        type: ['VerifiableCredential', 'Test'],
         issuer: 'did:test',
-        credentialSubject: 'did:subject',
-        claims: {},
-        issuedAt: new Date(),
-        signature: 'valid-sig',
+        validFrom: '2024-01-01T00:00:00Z',
+        credentialSubject: { id: 'did:subject' },
+        proof: {
+          type: 'DataIntegrityProof',
+          created: '2024-01-01T00:00:00Z',
+          proofPurpose: 'assertionMethod',
+          verificationMethod: 'did:test#key-1',
+          cryptosuite: 'ed25519-2020',
+          proofValue: 'valid-sig',
+        },
       };
 
       const result = await service.verifyCredential(credential);
@@ -148,15 +203,21 @@ describe('CredentialService', () => {
     });
 
     it('should verify credential with correct signature extraction', async () => {
-      const issuedAt = new Date('2024-01-01');
       const credential = {
+        '@context': ['https://www.w3.org/ns/credentials/v2'],
         id: 'test-id',
-        type: 'TestCredential',
+        type: ['VerifiableCredential', 'TestCredential'],
         issuer: 'did:test:issuer',
-        credentialSubject: 'did:test:subject',
-        claims: { name: 'Alice', age: 30 },
-        issuedAt,
-        signature: 'actual-signature-value',
+        validFrom: '2024-01-01T00:00:00Z',
+        credentialSubject: { id: 'did:test:subject', name: 'Alice', age: 30 },
+        proof: {
+          type: 'DataIntegrityProof',
+          created: '2024-01-01T00:00:00Z',
+          proofPurpose: 'assertionMethod',
+          verificationMethod: 'did:test:issuer#key-1',
+          cryptosuite: 'ed25519-2020',
+          proofValue: 'actual-signature-value',
+        },
       };
 
       await service.verifyCredential(credential);
@@ -166,15 +227,15 @@ describe('CredentialService', () => {
       // 2. The signature as a separate argument
       expect(issuerService.verify).toHaveBeenCalledWith(
         {
+          '@context': ['https://www.w3.org/ns/credentials/v2'],
           id: 'test-id',
-          type: 'TestCredential',
+          type: ['VerifiableCredential', 'TestCredential'],
           issuer: 'did:test:issuer',
-          credentialSubject: 'did:test:subject',
-          claims: { name: 'Alice', age: 30 },
-          issuedAt,
-          // Note: signature is NOT included in the credential data
+          validFrom: '2024-01-01T00:00:00Z',
+          credentialSubject: { id: 'did:test:subject', name: 'Alice', age: 30 },
+          // Note: proof is NOT included in the credential data
         },
-        'actual-signature-value' // signature passed separately
+        'actual-signature-value' // proofValue passed separately
       );
     });
 
@@ -185,33 +246,71 @@ describe('CredentialService', () => {
       expect(result.reason).toBe('Missing Credential');
     });
 
-    it('should return invalid for missing signature', async () => {
+    it('should return invalid for missing proof', async () => {
       const credential = {
+        '@context': ['https://www.w3.org/ns/credentials/v2'],
         id: '1',
-        type: 'Test',
+        type: ['VerifiableCredential', 'Test'],
         issuer: 'did:test',
-        credentialSubject: 'did:subject',
-        claims: {},
-        issuedAt: new Date(),
-        signature: '',
+        validFrom: '2024-01-01T00:00:00Z',
+        credentialSubject: { id: 'did:subject' },
+        proof: {
+          type: 'DataIntegrityProof',
+          created: '2024-01-01T00:00:00Z',
+          proofPurpose: 'assertionMethod',
+          verificationMethod: 'did:test#key-1',
+          cryptosuite: 'ed25519-2020',
+          proofValue: '',
+        },
       };
 
       const result = await service.verifyCredential(credential);
 
       expect(result.valid).toBe(false);
-      expect(result.reason).toBe('Missing signature');
+      expect(result.reason).toBe('Missing proof');
+    });
+
+    it('should return invalid for unsupported cryptosuite', async () => {
+      const credential = {
+        '@context': ['https://www.w3.org/ns/credentials/v2'],
+        id: '1',
+        type: ['VerifiableCredential', 'Test'],
+        issuer: 'did:test',
+        validFrom: '2024-01-01T00:00:00Z',
+        credentialSubject: { id: 'did:subject' },
+        proof: {
+          type: 'DataIntegrityProof',
+          created: '2024-01-01T00:00:00Z',
+          proofPurpose: 'assertionMethod',
+          verificationMethod: 'did:test#key-1',
+          cryptosuite: 'unsupported-suite',
+          proofValue: 'valid-sig',
+        },
+      };
+
+      const result = await service.verifyCredential(credential);
+
+      expect(result.valid).toBe(false);
+      expect(result.reason).toBe('Unsupported cryptosuite');
     });
 
     it('should return invalid for invalid signature', async () => {
       issuerService.verify.mockReturnValue(false);
       const credential = {
+        '@context': ['https://www.w3.org/ns/credentials/v2'],
         id: '1',
-        type: 'Test',
+        type: ['VerifiableCredential', 'Test'],
         issuer: 'did:test',
-        credentialSubject: 'did:subject',
-        claims: {},
-        issuedAt: new Date(),
-        signature: 'invalid-sig',
+        validFrom: '2024-01-01T00:00:00Z',
+        credentialSubject: { id: 'did:subject' },
+        proof: {
+          type: 'DataIntegrityProof',
+          created: '2024-01-01T00:00:00Z',
+          proofPurpose: 'assertionMethod',
+          verificationMethod: 'did:test#key-1',
+          cryptosuite: 'ed25519-2020',
+          proofValue: 'invalid-sig',
+        },
       };
 
       const result = await service.verifyCredential(credential);

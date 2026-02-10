@@ -7,13 +7,20 @@ describe('CredentialController', () => {
   let credentialService: jest.Mocked<CredentialService>;
 
   const mockCredential: Credential = {
+    '@context': ['https://www.w3.org/ns/credentials/v2'],
     id: 'test-id',
-    type: 'TestCredential',
+    type: ['VerifiableCredential', 'TestCredential'],
     issuer: 'did:vc-server:issuer',
-    credentialSubject: 'did:vc-server:wallet:test-wallet',
-    claims: { name: 'Test' },
-    issuedAt: new Date(),
-    signature: 'test-signature',
+    validFrom: '2024-01-01T00:00:00Z',
+    credentialSubject: { id: 'did:vc-server:wallet:test-wallet', name: 'Test' },
+    proof: {
+      type: 'DataIntegrityProof',
+      created: '2024-01-01T00:00:00Z',
+      proofPurpose: 'assertionMethod',
+      verificationMethod: 'did:vc-server:issuer#key-1',
+      cryptosuite: 'ed25519-2020',
+      proofValue: 'test-signature',
+    },
   };
 
   beforeEach(async () => {
@@ -44,10 +51,9 @@ describe('CredentialController', () => {
 
   describe('issueCredential', () => {
     it('should issue a credential', async () => {
-      const req = { walletId: 'test-wallet' } as any;
       const body = { type: 'TestCredential', claims: { name: 'Test' } };
 
-      const result = await controller.issueCredential(req, body);
+      const result = await controller.issueCredential('test-wallet', body);
 
       expect(credentialService.issue).toHaveBeenCalledWith('test-wallet', 'TestCredential', { name: 'Test' });
       expect(result).toEqual(mockCredential);
@@ -56,9 +62,7 @@ describe('CredentialController', () => {
 
   describe('getCredentials', () => {
     it('should return list of credentials', async () => {
-      const req = { walletId: 'test-wallet' } as any;
-
-      const result = await controller.getAllCredentials(req);
+      const result = await controller.getAllCredentials('test-wallet');
 
       expect(credentialService.getCredentialsList).toHaveBeenCalledWith('test-wallet');
       expect(result).toEqual([mockCredential]);
@@ -67,9 +71,7 @@ describe('CredentialController', () => {
 
   describe('getCredential', () => {
     it('should return a single credential', async () => {
-      const req = { walletId: 'test-wallet' } as any;
-
-      const result = await controller.getCredentialbyId(req, 'test-id');
+      const result = await controller.getCredentialbyId('test-wallet', 'test-id');
 
       expect(credentialService.getCredentialById).toHaveBeenCalledWith('test-wallet', 'test-id');
       expect(result).toEqual(mockCredential);
@@ -78,9 +80,7 @@ describe('CredentialController', () => {
 
   describe('verifyCredentialWithId', () => {
     it('should verify credential by ID', async () => {
-      const req = { walletId: 'test-wallet' } as any;
-
-      const result = await controller.verifyCredentialWithId(req, 'test-id');
+      const result = await controller.verifyCredentialWithId('test-wallet', 'test-id');
 
       expect(credentialService.verifyCredentialWithId).toHaveBeenCalledWith('test-wallet', 'test-id');
       expect(result).toEqual({ valid: true });
@@ -98,9 +98,7 @@ describe('CredentialController', () => {
 
   describe('deleteCredential', () => {
     it('should delete a credential and return confirmation', async () => {
-      const req = { walletId: 'test-wallet' } as any;
-
-      const result = await controller.deleteCredential(req, 'test-id');
+      const result = await controller.deleteCredential('test-wallet', 'test-id');
 
       expect(credentialService.deleteCredential).toHaveBeenCalledWith('test-wallet', 'test-id');
       expect(result).toEqual({ deleted: true, id: 'test-id' });

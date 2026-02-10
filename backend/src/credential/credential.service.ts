@@ -4,24 +4,33 @@ import * as fs from 'fs/promises';
 import path from 'path';
 import { IssuerService } from 'src/issuer/issuer.service';
 
+
+
+export interface Proof {
+    type: 'DataIntegrityProof';
+    created: string;
+    proofPurpose: 'assertionMethod';
+    verificationMethod: string;
+    /** Identifies the signature + canonicalization suite used. */
+    cryptosuite: string;
+    proofValue: string;
+}
+
+export type CredentialSubject = {
+    id: string;
+} & Record<string, unknown>;
+
 /**
  * Represents a verifiable credential issued to a wallet.
  */
 export interface Credential {
-    /** Unique identifier for the credential (UUID) */
-    id: string,
-    /** The type/category of the credential (e.g., "DriverLicense", "Diploma") */
-    type: string,
-    /** DID of the issuer who signed the credential */
-    issuer: string,
-    /** DID of the subject (wallet) the credential is issued to */
-    credentialSubject: string,
-    /** Key-value pairs containing the credential's claims/attributes */
-    claims: Record<string, any>,
-    /** Timestamp when the credential was issued */
-    issuedAt: Date,
-    /** Cryptographic signature proving authenticity */
-    signature: string
+    '@context': string[];
+    id: string;
+    type: string[];
+    issuer: string;
+    validFrom: string;
+    credentialSubject: CredentialSubject;
+    proof: Proof;
 }
 
 /**
@@ -67,6 +76,27 @@ export class CredentialService {
         return `did:vc-server:wallet:${walletId}`;
     }
 
+    buildUnsignedCredential(
+        issuerDid: string,
+        subjectDid: string,
+        types: string[],
+        claims: Record<string, unknown>,
+    ): Omit<Credential, 'proof'> {
+        // This is the canonical payload that gets signed; proof is added later.
+        return {
+            '@context': ['https://www.w3.org/ns/credentials/v2'],
+            id: `urn:uuid:${randomUUID()}`,
+            type: ['VerifiableCredential', ...types],
+            issuer: issuerDid,
+            validFrom: new Date().toISOString(),
+            credentialSubject: {
+                id: subjectDid,
+                ...claims,
+            },
+        };
+    }
+
+
     constructor(private readonly issuerService: IssuerService) { }
 
     /**
@@ -78,18 +108,23 @@ export class CredentialService {
      */
     async issue(walletId: string, type: string, claims: Record<string, unknown>): Promise<Credential> {
         const vcWallet = await this.loadWallet(walletId);
-        const credentialUnsigned = {
-            id: randomUUID(),
-            type,
-            issuer: this.issuerService.getIssuerDid(),
-            credentialSubject: this.credentialSubjectDid(walletId),
+        const credentialUnsigned = this.buildUnsignedCredential(
+            this.issuerService.getIssuerDid(),
+            this.credentialSubjectDid(walletId),
+            [type],
             claims,
-            issuedAt: new Date(),
-        };
+        );
         const signature = this.issuerService.sign(credentialUnsigned);
         const credential: Credential = {
             ...credentialUnsigned,
-            signature
+            proof: {
+                type: 'DataIntegrityProof',
+                created: new Date().toISOString(),
+                proofPurpose: 'assertionMethod',
+                verificationMethod: `${this.issuerService.getIssuerDid()}#key-1`,
+                cryptosuite: 'ed25519-2020',
+                proofValue: signature,
+            },
         };
         vcWallet.credentials.push(credential);
         await this.saveWallet(walletId, vcWallet);
@@ -138,20 +173,21 @@ export class CredentialService {
      * @returns Verification result with validity status and optional reason if invalid
      */
     async verifyCredential(credential: Credential | undefined): Promise<{ valid: boolean, reason?: string }> {
-        try {
-            if (!credential) {
-                return { valid: false, reason: 'Missing Credential' };
-            }
-            if (!credential.signature) {
-                return { valid: false, reason: 'Missing signature' };
-            }
-            // Extract signature and verify the remaining credential data
-            const { signature, ...credentialData } = credential;
-            const verified = this.issuerService.verify(credentialData, signature);
-            return verified ? { valid: true } : { valid: false, reason: 'Invalid signature' };
-        } catch {
-            return { valid: false, reason: 'Error during verification' };
+        if (!credential) {
+            return { valid: false, reason: 'Missing Credential' };
         }
+        const { proof, ...rest } = credential;
+        if (!proof || !proof.proofValue) {
+            return { valid: false, reason: 'Missing proof' };
+        }
+        if (!proof.cryptosuite || proof.cryptosuite !== 'ed25519-2020') {
+            return { valid: false, reason: 'Unsupported cryptosuite' };
+        }
+        const isValid = this.issuerService.verify(rest, proof.proofValue);
+        if (!isValid) {
+            return { valid: false, reason: 'Invalid signature' };
+        }
+        return { valid: true };
     }
 
 
@@ -172,5 +208,4 @@ export class CredentialService {
     }
 
 }
-
 

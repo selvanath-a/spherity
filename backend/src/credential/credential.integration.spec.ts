@@ -62,9 +62,12 @@ describe('Credential Integration Tests', () => {
 
             // Verify the credential structure
             expect(issuedCredential).toHaveProperty('id');
-            expect(issuedCredential).toHaveProperty('signature');
-            expect(issuedCredential.type).toBe(credentialType);
-            expect(issuedCredential.claims).toEqual(claims);
+            expect(issuedCredential).toHaveProperty('proof');
+            expect(issuedCredential.type).toEqual(['VerifiableCredential', credentialType]);
+            expect(issuedCredential.credentialSubject).toMatchObject({
+                id: `did:vc-server:wallet:${walletId}`,
+                ...claims,
+            });
             expect(issuedCredential.issuer).toBe(issuerService.getIssuerDid());
 
             // Verify the credential with REAL cryptographic verification
@@ -87,10 +90,10 @@ describe('Credential Integration Tests', () => {
             // Tamper with the claims
             const tamperedCredential = {
                 ...credential,
-                claims: {
-                    ...credential.claims,
+                credentialSubject: {
+                    ...credential.credentialSubject,
                     degree: 'PhD', // Changed!
-                },
+                }
             };
 
             // Verification should fail because signature doesn't match tampered data
@@ -112,7 +115,10 @@ describe('Credential Integration Tests', () => {
             // Tamper with the signature
             const tamperedCredential = {
                 ...credential,
-                signature: credential.signature.slice(0, -4) + 'ffff',
+                proof: {
+                    ...credential.proof,
+                    proofValue: credential.proof.proofValue.slice(0, -4) + 'ffff',
+                }
             };
 
             const result = await credentialService.verifyCredential(
@@ -133,7 +139,10 @@ describe('Credential Integration Tests', () => {
             // Replace with a completely fake signature
             const fakeCredential = {
                 ...credential,
-                signature: 'a'.repeat(128), // Valid length but wrong signature
+                proof: {
+                    ...credential.proof,
+                    proofValue: 'a'.repeat(128), // Valid length but wrong signature
+                }
             };
 
             const result = await credentialService.verifyCredential(fakeCredential);
@@ -152,7 +161,7 @@ describe('Credential Integration Tests', () => {
             });
 
             // Each should have unique signatures
-            expect(cred1.signature).not.toBe(cred2.signature);
+            expect(cred1.proof.proofValue).not.toBe(cred2.proof.proofValue);
 
             // Both should verify successfully
             const result1 = await credentialService.verifyCredential(cred1);
@@ -173,7 +182,10 @@ describe('Credential Integration Tests', () => {
             // Try to use cred1's signature on cred2's data (replay attack)
             const replayAttempt = {
                 ...cred2,
-                signature: cred1.signature,
+                proof: {
+                    ...cred2.proof,
+                    proofValue: cred1.proof.proofValue,
+                }
             };
 
             const result = await credentialService.verifyCredential(replayAttempt);
@@ -193,17 +205,13 @@ describe('Credential Integration Tests', () => {
             // Verify should work even if we reconstruct with different property order
             // (This tests that canonicalization is working correctly)
             const reorderedCredential = {
-                id: credential.id,
-                type: credential.type,
-                issuer: credential.issuer,
-                credentialSubject: credential.credentialSubject,
-                claims: {
+                ...credential,
+                credentialSubject: {
+                    id: credential.credentialSubject.id,
                     age: 30,
                     lastName: 'Doe',
                     firstName: 'John',
                 },
-                issuedAt: credential.issuedAt,
-                signature: credential.signature,
             };
 
             const result = await credentialService.verifyCredential(
@@ -227,7 +235,8 @@ describe('Credential Integration Tests', () => {
             // Tamper with a deeply nested value
             const tamperedCredential = {
                 ...credential,
-                claims: {
+                credentialSubject: {
+                    id: credential.credentialSubject.id,
                     personal: {
                         name: 'Alice',
                         address: {
@@ -235,7 +244,7 @@ describe('Credential Integration Tests', () => {
                             city: 'Cambridge', // Changed!
                         },
                     },
-                },
+                }
             };
 
             const result = await credentialService.verifyCredential(
@@ -254,8 +263,8 @@ describe('Credential Integration Tests', () => {
             });
 
             // Ed25519 signatures are 64 bytes = 128 hex characters
-            expect(credential.signature).toHaveLength(128);
-            expect(credential.signature).toMatch(/^[0-9a-f]+$/);
+            expect(credential.proof.proofValue).toHaveLength(128);
+            expect(credential.proof.proofValue).toMatch(/^[0-9a-f]+$/);
         });
 
         it('should produce deterministic signatures for identical data', async () => {

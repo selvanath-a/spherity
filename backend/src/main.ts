@@ -1,6 +1,8 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import cookieParser from 'cookie-parser';
+import { TimingInterceptor } from './common/interceptors/timing/timing.interceptor';
+import { ValidationPipe } from '@nestjs/common';
 
 /**
  * Bootstraps the NestJS application.
@@ -13,6 +15,8 @@ import cookieParser from 'cookie-parser';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   app.use(cookieParser());
+  app.useGlobalPipes(new ValidationPipe());
+  app.useGlobalInterceptors(new TimingInterceptor());
 
   const corsOrigin = process.env.CORS_ORIGIN || 'http://localhost:3000';
   app.enableCors({

@@ -1,16 +1,10 @@
 import { Body, Controller, Delete, Get, Param, Post, Req } from '@nestjs/common';
 import { CredentialService } from './credential.service';
 import type { Credential } from './credential.service';
+import { WalletId } from 'src/common/decorators/wallet-id.decorator';
+import { IssueCredentialDTO } from './dto/issue-credential.dto';
+import { VerifyCredentialDTO } from './dto/verify-credential.dto';
 
-/**
- * Request payload for issuing a new credential.
- */
-interface IssueCredentialDTO {
-    /** The type/category of credential to issue */
-    type: string;
-    /** Key-value pairs of claims to include in the credential */
-    claims: Record<string, unknown>;
-}
 
 /**
  * REST controller for credential management operations.
@@ -31,10 +25,10 @@ export class CredentialController {
      */
     @Post('issue')
     issueCredential(
-        @Req() req: Request & { walletId?: string },
+        // WalletId decorator avoids manual @Req() extraction.
+        @WalletId() walletId: string,
         @Body() body: IssueCredentialDTO,
     ): Promise<Credential> {
-        const walletId = req.walletId || '';
         return this.credentialService.issue(walletId, body.type, body.claims);
     }
 
@@ -45,8 +39,7 @@ export class CredentialController {
      * @returns Array of all credentials
      */
     @Get('list')
-    getAllCredentials(@Req() req: Request & { walletId?: string }): Promise<Credential[]> {
-        const walletId = req.walletId || '';
+    getAllCredentials(@WalletId() walletId: string): Promise<Credential[]> {
         return this.credentialService.getCredentialsList(walletId);
     }
 
@@ -59,10 +52,9 @@ export class CredentialController {
      */
     @Get(':id')
     getCredentialbyId(
-        @Req() req: Request & { walletId?: string },
+        @WalletId() walletId: string,
         @Param('id') id: string,
     ): Promise<Credential | undefined> {
-        const walletId = req.walletId || '';
         return this.credentialService.getCredentialById(walletId, id);
     }
 
@@ -75,10 +67,9 @@ export class CredentialController {
      */
     @Get(':id/verify')
     verifyCredentialWithId(
-        @Req() req: Request & { walletId?: string },
+        @WalletId() walletId: string,
         @Param('id') id: string,
     ): Promise<{ valid: boolean; reason?: string }> {
-        const walletId = req.walletId || '';
         return this.credentialService.verifyCredentialWithId(walletId, id);
     }
 
@@ -91,7 +82,7 @@ export class CredentialController {
      */
     @Post('verify')
     verifyCredential(
-        @Body() body: { credential: Credential },
+        @Body() body: VerifyCredentialDTO,
     ): Promise<{ valid: boolean; reason?: string }> {
         return this.credentialService.verifyCredential(body.credential);
     }
@@ -105,10 +96,9 @@ export class CredentialController {
      */
     @Delete(':id')
     deleteCredential(
-        @Req() req: Request & { walletId?: string },
+        @WalletId() walletId: string,
         @Param('id') id: string,
     ): Promise<{ deleted: boolean; id: string }> {
-        const walletId = req.walletId || '';
         return this.credentialService.deleteCredential(walletId, id);
     }
 }
