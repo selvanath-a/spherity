@@ -18,6 +18,13 @@ describe('Credential Integration Tests', () => {
     let issuerService: IssuerService;
     let cryptoService: CryptoService;
 
+    function dateWindow() {
+        return {
+            validFrom: new Date('2024-01-01T00:00:00.000Z').toISOString(),
+            validUntil: new Date('2025-01-01T00:00:00.000Z').toISOString(),
+        };
+    }
+
     beforeEach(async () => {
         jest.clearAllMocks();
 
@@ -58,11 +65,14 @@ describe('Credential Integration Tests', () => {
                 walletId,
                 credentialType,
                 claims,
+                dateWindow().validFrom,
+                dateWindow().validUntil,
             );
 
             // Verify the credential structure
             expect(issuedCredential).toHaveProperty('id');
             expect(issuedCredential).toHaveProperty('proof');
+            expect(issuedCredential.validUntil).toBeDefined();
             expect(issuedCredential.type).toEqual(['VerifiableCredential', credentialType]);
             expect(issuedCredential.credentialSubject).toMatchObject({
                 id: `did:vc-server:wallet:${walletId}`,
@@ -85,6 +95,8 @@ describe('Credential Integration Tests', () => {
                 'wallet-456',
                 'Diploma',
                 { degree: 'Bachelor of Science', university: 'MIT' },
+                dateWindow().validFrom,
+                dateWindow().validUntil,
             );
 
             // Tamper with the claims
@@ -110,6 +122,8 @@ describe('Credential Integration Tests', () => {
                 'wallet-789',
                 'MembershipCard',
                 { memberLevel: 'Gold' },
+                dateWindow().validFrom,
+                dateWindow().validUntil,
             );
 
             // Tamper with the signature
@@ -134,6 +148,8 @@ describe('Credential Integration Tests', () => {
                 'wallet-999',
                 'AccessBadge',
                 { accessLevel: 'Admin' },
+                dateWindow().validFrom,
+                dateWindow().validUntil,
             );
 
             // Replace with a completely fake signature
@@ -155,10 +171,10 @@ describe('Credential Integration Tests', () => {
             // Issue multiple credentials
             const cred1 = await credentialService.issue('wallet-1', 'TypeA', {
                 data: 'A',
-            });
+            }, dateWindow().validFrom, dateWindow().validUntil);
             const cred2 = await credentialService.issue('wallet-2', 'TypeB', {
                 data: 'B',
-            });
+            }, dateWindow().validFrom, dateWindow().validUntil);
 
             // Each should have unique signatures
             expect(cred1.proof.proofValue).not.toBe(cred2.proof.proofValue);
@@ -174,10 +190,10 @@ describe('Credential Integration Tests', () => {
         it('should reject replay attack (using signature from one credential on another)', async () => {
             const cred1 = await credentialService.issue('wallet-1', 'Document1', {
                 value: 100,
-            });
+            }, dateWindow().validFrom, dateWindow().validUntil);
             const cred2 = await credentialService.issue('wallet-2', 'Document2', {
                 value: 200,
-            });
+            }, dateWindow().validFrom, dateWindow().validUntil);
 
             // Try to use cred1's signature on cred2's data (replay attack)
             const replayAttempt = {
@@ -200,7 +216,7 @@ describe('Credential Integration Tests', () => {
                 firstName: 'John',
                 lastName: 'Doe',
                 age: 30,
-            });
+            }, dateWindow().validFrom, dateWindow().validUntil);
 
             // Verify should work even if we reconstruct with different property order
             // (This tests that canonicalization is working correctly)
@@ -230,7 +246,7 @@ describe('Credential Integration Tests', () => {
                         city: 'Boston',
                     },
                 },
-            });
+            }, dateWindow().validFrom, dateWindow().validUntil);
 
             // Tamper with a deeply nested value
             const tamperedCredential = {
@@ -260,7 +276,7 @@ describe('Credential Integration Tests', () => {
         it('should use Ed25519 signatures with correct length', async () => {
             const credential = await credentialService.issue('wallet-crypto', 'Test', {
                 test: 'data',
-            });
+            }, dateWindow().validFrom, dateWindow().validUntil);
 
             // Ed25519 signatures are 64 bytes = 128 hex characters
             expect(credential.proof.proofValue).toHaveLength(128);

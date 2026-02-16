@@ -1,28 +1,82 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import localFont from "next/font/local";
 import "./globals.css";
-import Link from "next/link";
+import { HeaderBar } from "@/components/HeaderBar";
+import { OfflineBanner } from "@/components/OfflineBanner";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
+const ptSerif = localFont({
+  src: [
+    {
+      path: "../../public/fonts/PTSerif-Regular.ttf",
+      weight: "400",
+      style: "normal",
+    },
+    {
+      path: "../../public/fonts/PTSerif-Bold.ttf",
+      weight: "700",
+      style: "normal",
+    },
+  ],
+  variable: "--font-pt-serif",
+  display: "swap",
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
+const liberationSans = localFont({
+  src: [
+    {
+      path: "../../public/fonts/LiberationSans-Regular.ttf",
+      weight: "400",
+      style: "normal",
+    },
+    {
+      path: "../../public/fonts/LiberationSans-Bold.ttf",
+      weight: "700",
+      style: "normal",
+    },
+  ],
+  variable: "--font-liberation-sans",
+  display: "swap",
 });
 
-/** Page metadata for SEO and browser tab */
+const liberationSerif = localFont({
+  src: [
+    {
+      path: "../../public/fonts/LiberationSerif-Regular.ttf",
+      weight: "400",
+      style: "normal",
+    },
+    {
+      path: "../../public/fonts/LiberationSerif-Bold.ttf",
+      weight: "700",
+      style: "normal",
+    },
+  ],
+  variable: "--font-liberation-serif",
+  display: "swap",
+});
+
+const nimbusMono = localFont({
+  src: [
+    {
+      path: "../../public/fonts/NimbusMono-Regular.otf",
+      weight: "400",
+      style: "normal",
+    },
+    {
+      path: "../../public/fonts/NimbusMono-Bold.otf",
+      weight: "700",
+      style: "normal",
+    },
+  ],
+  variable: "--font-nimbus-mono",
+  display: "swap",
+});
+
 export const metadata: Metadata = {
   title: "VC Wallet",
   description: "Credential wallet for managing verifiable credentials",
 };
 
-/**
- * Root layout component wrapping all pages.
- * Provides navigation header with links to Dashboard, Issue, and Verify pages.
- */
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -31,27 +85,11 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${ptSerif.variable} ${liberationSerif.variable} ${liberationSans.variable} ${nimbusMono.variable} antialiased bg-background text-text min-h-screen`}
       >
-        <nav className="nav">
-          <div className="nav-container">
-            <Link href="/" className="nav-brand">
-              Wallet
-            </Link>
-            <div className="nav-links">
-              <Link href="/" className="nav-link">
-                Dashboard
-              </Link>
-              <Link href="/issue" className="nav-link">
-                Issue
-              </Link>
-              <Link href="/verify" className="nav-link">
-                Verify
-              </Link>
-            </div>
-          </div>
-        </nav>
-        <main className="main-content">{children}</main>
+        <OfflineBanner />
+        <HeaderBar />
+        {children}
       </body>
     </html>
   );

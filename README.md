@@ -69,6 +69,7 @@ This project uses a minimal **W3C Verifiable Credentials Data Model v2.0** compl
   ],
   "issuer": "did:web:issuer.example.com",
   "validFrom": "2026-01-01T12:00:00Z",
+  "validUntil": "2027-01-01T12:00:00Z",
   "credentialSubject": {
     "id": "did:key:z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK",
     "level": "Gold"

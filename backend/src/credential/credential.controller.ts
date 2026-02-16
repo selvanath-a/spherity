@@ -29,7 +29,7 @@ export class CredentialController {
         @WalletId() walletId: string,
         @Body() body: IssueCredentialDTO,
     ): Promise<Credential> {
-        return this.credentialService.issue(walletId, body.type, body.claims);
+        return this.credentialService.issue(walletId, body.type, body.claims, body.validFrom, body.validUntil);
     }
 
     /**

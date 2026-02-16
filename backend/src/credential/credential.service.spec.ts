@@ -42,7 +42,13 @@ describe('CredentialService', () => {
       mockFs.mkdir.mockResolvedValue(undefined);
       mockFs.writeFile.mockResolvedValue(undefined);
 
-      const result = await service.issue('test-wallet', 'TestCredential', { name: 'John' });
+      const result = await service.issue(
+        'test-wallet',
+        'TestCredential',
+        { name: 'John' },
+        '2024-01-01T00:00:00Z',
+        '2025-01-01T00:00:00Z',
+      );
 
       expect(result.type).toEqual(['VerifiableCredential', 'TestCredential']);
       expect(result.issuer).toBe('did:vc-server:issuer');
@@ -50,6 +56,7 @@ describe('CredentialService', () => {
         id: 'did:vc-server:wallet:test-wallet',
         name: 'John',
       });
+      expect(result.validUntil).toEqual(expect.any(String));
       expect(result.proof.proofValue).toBe('mock-signature');
       expect(result.proof.cryptosuite).toBe('ed25519-2020');
       expect(issuerService.sign).toHaveBeenCalled();
@@ -76,12 +83,13 @@ describe('CredentialService', () => {
             type: ['VerifiableCredential', 'Test'],
             issuer: 'did:test',
             validFrom: '2024-01-01T00:00:00Z',
+            validUntil: '2025-01-01T00:00:00Z',
             credentialSubject: { id: 'did:subject' },
             proof: {
               type: 'DataIntegrityProof',
               created: '2024-01-01T00:00:00Z',
               proofPurpose: 'assertionMethod',
-              verificationMethod: 'did:test#key-1',
+              verificationMethod: 'did:vc-server:issuer#key-1',
               cryptosuite: 'ed25519-2020',
               proofValue: 'sig',
             },
@@ -107,12 +115,13 @@ describe('CredentialService', () => {
             type: ['VerifiableCredential', 'Test'],
             issuer: 'did:test',
             validFrom: '2024-01-01T00:00:00Z',
+            validUntil: '2025-01-01T00:00:00Z',
             credentialSubject: { id: 'did:subject' },
             proof: {
               type: 'DataIntegrityProof',
               created: '2024-01-01T00:00:00Z',
               proofPurpose: 'assertionMethod',
-              verificationMethod: 'did:test#key-1',
+              verificationMethod: 'did:vc-server:issuer#key-1',
               cryptosuite: 'ed25519-2020',
               proofValue: 'sig',
             },
@@ -146,12 +155,13 @@ describe('CredentialService', () => {
             type: ['VerifiableCredential', 'Test'],
             issuer: 'did:test',
             validFrom: '2024-01-01T00:00:00Z',
+            validUntil: '2025-01-01T00:00:00Z',
             credentialSubject: { id: 'did:subject' },
             proof: {
               type: 'DataIntegrityProof',
               created: '2024-01-01T00:00:00Z',
               proofPurpose: 'assertionMethod',
-              verificationMethod: 'did:test#key-1',
+              verificationMethod: 'did:vc-server:issuer#key-1',
               cryptosuite: 'ed25519-2020',
               proofValue: 'sig',
             },
@@ -186,12 +196,13 @@ describe('CredentialService', () => {
         type: ['VerifiableCredential', 'Test'],
         issuer: 'did:test',
         validFrom: '2024-01-01T00:00:00Z',
+        validUntil: '2025-01-01T00:00:00Z',
         credentialSubject: { id: 'did:subject' },
         proof: {
           type: 'DataIntegrityProof',
           created: '2024-01-01T00:00:00Z',
           proofPurpose: 'assertionMethod',
-          verificationMethod: 'did:test#key-1',
+          verificationMethod: 'did:vc-server:issuer#key-1',
           cryptosuite: 'ed25519-2020',
           proofValue: 'valid-sig',
         },
@@ -209,12 +220,13 @@ describe('CredentialService', () => {
         type: ['VerifiableCredential', 'TestCredential'],
         issuer: 'did:test:issuer',
         validFrom: '2024-01-01T00:00:00Z',
+        validUntil: '2025-01-01T00:00:00Z',
         credentialSubject: { id: 'did:test:subject', name: 'Alice', age: 30 },
         proof: {
           type: 'DataIntegrityProof',
           created: '2024-01-01T00:00:00Z',
           proofPurpose: 'assertionMethod',
-          verificationMethod: 'did:test:issuer#key-1',
+          verificationMethod: 'did:vc-server:issuer#key-1',
           cryptosuite: 'ed25519-2020',
           proofValue: 'actual-signature-value',
         },
@@ -232,6 +244,7 @@ describe('CredentialService', () => {
           type: ['VerifiableCredential', 'TestCredential'],
           issuer: 'did:test:issuer',
           validFrom: '2024-01-01T00:00:00Z',
+          validUntil: '2025-01-01T00:00:00Z',
           credentialSubject: { id: 'did:test:subject', name: 'Alice', age: 30 },
           // Note: proof is NOT included in the credential data
         },
@@ -253,12 +266,13 @@ describe('CredentialService', () => {
         type: ['VerifiableCredential', 'Test'],
         issuer: 'did:test',
         validFrom: '2024-01-01T00:00:00Z',
+        validUntil: '2025-01-01T00:00:00Z',
         credentialSubject: { id: 'did:subject' },
         proof: {
           type: 'DataIntegrityProof',
           created: '2024-01-01T00:00:00Z',
           proofPurpose: 'assertionMethod',
-          verificationMethod: 'did:test#key-1',
+          verificationMethod: 'did:vc-server:issuer#key-1',
           cryptosuite: 'ed25519-2020',
           proofValue: '',
         },
@@ -277,12 +291,13 @@ describe('CredentialService', () => {
         type: ['VerifiableCredential', 'Test'],
         issuer: 'did:test',
         validFrom: '2024-01-01T00:00:00Z',
+        validUntil: '2025-01-01T00:00:00Z',
         credentialSubject: { id: 'did:subject' },
         proof: {
           type: 'DataIntegrityProof',
           created: '2024-01-01T00:00:00Z',
           proofPurpose: 'assertionMethod',
-          verificationMethod: 'did:test#key-1',
+          verificationMethod: 'did:vc-server:issuer#key-1',
           cryptosuite: 'unsupported-suite',
           proofValue: 'valid-sig',
         },
@@ -302,12 +317,13 @@ describe('CredentialService', () => {
         type: ['VerifiableCredential', 'Test'],
         issuer: 'did:test',
         validFrom: '2024-01-01T00:00:00Z',
+        validUntil: '2025-01-01T00:00:00Z',
         credentialSubject: { id: 'did:subject' },
         proof: {
           type: 'DataIntegrityProof',
           created: '2024-01-01T00:00:00Z',
           proofPurpose: 'assertionMethod',
-          verificationMethod: 'did:test#key-1',
+          verificationMethod: 'did:vc-server:issuer#key-1',
           cryptosuite: 'ed25519-2020',
           proofValue: 'invalid-sig',
         },

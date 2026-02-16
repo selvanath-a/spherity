@@ -1,8 +1,12 @@
 "use client";
 
-import { useState, useEffect, use } from "react";
+import { CredentialMeta } from "@/components/credential-details/CredentialMeta";
+import { CredentialProof } from "@/components/credential-details/CredentialProof";
+import { CredentialRawJson } from "@/components/credential-details/CredentialRawJson";
+import { getCredential, type Credential } from "@/lib/api";
+import { getDisplayType } from "@/utils";
 import Link from "next/link";
-import { getCredential, Credential } from "@/lib/api";
+import { use, useEffect, useState } from "react";
 
 /**
  * Detail page displaying a single credential's full information.
@@ -18,7 +22,6 @@ export default function CredentialDetailPage({
   const [credential, setCredential] = useState<Credential | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     async function load() {
@@ -26,7 +29,9 @@ export default function CredentialDetailPage({
         const data = await getCredential(id);
         setCredential(data);
       } catch (err) {
-        setError(err instanceof Error ? err.message : "Failed loading credential");
+        setError(
+          err instanceof Error ? err.message : "Failed loading credential",
+        );
       } finally {
         setLoading(false);
       }
@@ -34,23 +39,16 @@ export default function CredentialDetailPage({
     load();
   }, [id]);
 
-  /** Copies the credential JSON to clipboard and shows confirmation. */
-  function handleCopyJson() {
-    if (credential) {
-      navigator.clipboard.writeText(JSON.stringify(credential, null, 2));
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    }
-  }
-
   if (loading) {
     return <div className="loading">Loading credential...</div>;
   }
 
-  if (error) {
+  if (error || !credential) {
     return (
-      <div>
-        <div className="alert alert-error">{error}</div>
+      <div className="mx-auto w-full max-w-6xl px-4 pb-8 pt-6 md:px-6 lg:px-8">
+        <div className="alert alert-error">
+          {error ?? "Credential not found"}
+        </div>
         <Link href="/" className="btn btn-outline">
           ← Back to Dashboard
         </Link>
@@ -59,34 +57,26 @@ export default function CredentialDetailPage({
   }
 
   return (
-    <div>
-      <div className="page-header">
-        <h1 className="page-title">Credential Details</h1>
+    <div className="mx-auto w-full max-w-6xl px-4 pb-8 pt-6 md:px-6 lg:px-8">
+      <div className="mb-4 flex items-center justify-between gap-3">
+        <h1 className="font-liberation-serif text-2xl text-text">
+          Credential Details
+        </h1>
         <Link href="/" className="btn btn-outline">
           ← Back to Dashboard
         </Link>
       </div>
 
-      <div className="card">
-        <div style={{ marginBottom: "1rem" }}>
-          <strong>Type:</strong> {credential?.type}
-        </div>
-        <div style={{ marginBottom: "1rem" }}>
-          <strong>Issuer:</strong> {credential?.issuer}
-        </div>
-        <div style={{ marginBottom: "1rem" }}>
-          <strong>Subject:</strong> {credential?.credentialSubject}
-        </div>
-      </div>
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
+        <section className="lg:col-span-7 rounded-2xl border border-border bg-white p-6 h-fit">
+          <div className="mb-4">{getDisplayType(credential)}</div>
+          <CredentialMeta credential={credential} />
+          <CredentialProof credential={credential} />
+        </section>
 
-      <h2 className="page-title" style={{ fontSize: "1.25rem", margin: "1.5rem 0 1rem" }}>
-        Raw JSON
-      </h2>
-      <pre className="json-display">{JSON.stringify(credential, null, 2)}</pre>
-      <div style={{ marginTop: "1rem", display: "flex", gap: "0.5rem" }}>
-        <button onClick={handleCopyJson} className="btn btn-primary">
-          {copied ? "Copied!" : "Copy JSON"}
-        </button>
+        <section className="lg:col-span-5 rounded-2xl border border-border bg-white p-6">
+          <CredentialRawJson credential={credential} separatePage={true} />
+        </section>
       </div>
     </div>
   );

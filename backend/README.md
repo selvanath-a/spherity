@@ -8,6 +8,7 @@ A NestJS backend for issuing and verifying Verifiable Credentials (VCs).
 - Verify credential signatures
 - Per-user wallet storage via HTTP cookies
 - RESTful API
+- Credentials include validity window (`validFrom` / `validUntil`)
 
 ## Prerequisites
 
@@ -58,7 +59,12 @@ The server runs on `http://localhost:3001` by default.
 curl -X POST http://localhost:3001/credential/issue \
   -H "Content-Type: application/json" \
   -c cookies.txt -b cookies.txt \
-  -d '{"type": "VerifiableCredential", "claims": {"name": "John Doe"}}'
+  -d '{
+    "type": "VerifiableCredential",
+    "claims": {"name": "John Doe"},
+    "validFrom": "2026-02-16T00:00:00.000Z",
+    "validUntil": "2027-02-16T00:00:00.000Z"
+  }'
 ```
 
 ### List Credentials
@@ -71,6 +77,18 @@ curl http://localhost:3001/credential/list -b cookies.txt
 
 ```bash
 curl http://localhost:3001/credential/{id}/verify -b cookies.txt
+```
+
+`validFrom` and `validUntil` are required ISO-8601 timestamps for issuance.
+
+## Seed Data
+
+```bash
+# Default: wallet "seed-wallet", 100 credentials
+pnpm seed
+
+# Custom wallet and count
+pnpm seed my-wallet 250
 ```
 
 ## Testing

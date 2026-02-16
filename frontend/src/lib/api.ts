@@ -3,30 +3,13 @@
  * All requests include credentials to maintain wallet identity via cookies.
  * @module api
  */
+import type { Credential } from "@/models/credential.model";
+
+export type { Credential };
 
 /** Backend server URL, configurable via NEXT_PUBLIC_BACKEND_URL environment variable */
 const BACKEND_URL =
     process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3001";
-
-/**
- * Represents a verifiable credential returned from the backend.
- */
-export interface Credential {
-    /** Unique identifier (UUID) */
-    id: string;
-    /** Credential type/category (e.g., "DriverLicense", "Diploma") */
-    type: string;
-    /** DID of the issuer who signed the credential */
-    issuer: string;
-    /** DID of the subject (wallet) the credential belongs to */
-    credentialSubject: string;
-    /** Key-value pairs of claims/attributes */
-    claims: Record<string, unknown>;
-    /** ISO timestamp of when the credential was issued */
-    issuedAt: string;
-    /** Hex-encoded Ed25519 signature */
-    signature: string;
-}
 
 /**
  * Request payload for issuing a new credential.
@@ -36,6 +19,10 @@ export interface IssueCredentialRequest {
     type: string;
     /** Key-value pairs of claims to include */
     claims: Record<string, unknown>;
+
+    validFrom: string;
+
+    validUntil: string;
 }
 
 /**

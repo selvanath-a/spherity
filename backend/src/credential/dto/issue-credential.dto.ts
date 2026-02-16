@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsObject, IsString } from "class-validator";
+import { IsISO8601, IsNotEmpty, IsObject, IsString } from "class-validator";
 
 export class IssueCredentialDTO {
     /** The type/category of credential to issue */
@@ -9,4 +9,10 @@ export class IssueCredentialDTO {
     @IsObject()
     @IsNotEmpty()
     claims: Record<string, unknown>;
+
+    @IsISO8601()
+    validFrom: string;
+
+    @IsISO8601()
+    validUntil: string;
 }

@@ -7,9 +7,9 @@ import { IssuerService } from 'src/issuer/issuer.service';
 
 
 export interface Proof {
-    type: 'DataIntegrityProof';
+    type: string;
     created: string;
-    proofPurpose: 'assertionMethod';
+    proofPurpose: string;
     verificationMethod: string;
     /** Identifies the signature + canonicalization suite used. */
     cryptosuite: string;
@@ -29,6 +29,7 @@ export interface Credential {
     type: string[];
     issuer: string;
     validFrom: string;
+    validUntil: string;
     credentialSubject: CredentialSubject;
     proof: Proof;
 }
@@ -47,6 +48,9 @@ export interface CredentialStore {
  */
 @Injectable()
 export class CredentialService {
+    private readonly EXPECTED_PROOF_TYPE = 'DataIntegrityProof';
+    private readonly EXPECTED_PROOF_PURPOSE = 'assertionMethod';
+    private readonly EXPECTED_CRYPTOSUITE = 'ed25519-2020';
 
     private walletPath(walletId: string) {
         return path.join(process.cwd(), 'data', 'wallets', `${walletId}.json`);
@@ -81,14 +85,20 @@ export class CredentialService {
         subjectDid: string,
         types: string[],
         claims: Record<string, unknown>,
+        validFrom: string,
+        validUntil: string,
     ): Omit<Credential, 'proof'> {
+        const start = new Date(validFrom);
+        const end = new Date(validUntil);
+
         // This is the canonical payload that gets signed; proof is added later.
         return {
             '@context': ['https://www.w3.org/ns/credentials/v2'],
             id: `urn:uuid:${randomUUID()}`,
             type: ['VerifiableCredential', ...types],
             issuer: issuerDid,
-            validFrom: new Date().toISOString(),
+            validFrom: start.toISOString(),
+            validUntil: end.toISOString(),
             credentialSubject: {
                 id: subjectDid,
                 ...claims,
@@ -106,13 +116,21 @@ export class CredentialService {
      * @param claims - Key-value pairs of claims to include in the credential
      * @returns The newly issued and signed credential
      */
-    async issue(walletId: string, type: string, claims: Record<string, unknown>): Promise<Credential> {
+    async issue(
+        walletId: string,
+        type: string,
+        claims: Record<string, unknown>,
+        validFrom: string,
+        validUntil: string,
+    ): Promise<Credential> {
         const vcWallet = await this.loadWallet(walletId);
         const credentialUnsigned = this.buildUnsignedCredential(
             this.issuerService.getIssuerDid(),
             this.credentialSubjectDid(walletId),
             [type],
             claims,
+            validFrom,
+            validUntil
         );
         const signature = this.issuerService.sign(credentialUnsigned);
         const credential: Credential = {
@@ -180,7 +198,21 @@ export class CredentialService {
         if (!proof || !proof.proofValue) {
             return { valid: false, reason: 'Missing proof' };
         }
-        if (!proof.cryptosuite || proof.cryptosuite !== 'ed25519-2020') {
+        if (proof.type !== this.EXPECTED_PROOF_TYPE) {
+            return { valid: false, reason: 'Invalid proof type' };
+        }
+        if (proof.proofPurpose !== this.EXPECTED_PROOF_PURPOSE) {
+            return { valid: false, reason: 'Invalid proof purpose' };
+        }
+        const expectedVerificationMethod = `${this.issuerService.getIssuerDid()}#key-1`;
+        if (proof.verificationMethod !== expectedVerificationMethod) {
+            return { valid: false, reason: 'Invalid verification method' };
+        }
+        const createdTs = Date.parse(proof.created);
+        if (Number.isNaN(createdTs)) {
+            return { valid: false, reason: 'Invalid proof created timestamp' };
+        }
+        if (!proof.cryptosuite || proof.cryptosuite !== this.EXPECTED_CRYPTOSUITE) {
             return { valid: false, reason: 'Unsupported cryptosuite' };
         }
         const isValid = this.issuerService.verify(rest, proof.proofValue);
@@ -208,4 +240,3 @@ export class CredentialService {
     }
 
 }
-

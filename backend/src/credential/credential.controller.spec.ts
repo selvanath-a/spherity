@@ -12,6 +12,7 @@ describe('CredentialController', () => {
     type: ['VerifiableCredential', 'TestCredential'],
     issuer: 'did:vc-server:issuer',
     validFrom: '2024-01-01T00:00:00Z',
+    validUntil: '2025-01-01T00:00:00Z',
     credentialSubject: { id: 'did:vc-server:wallet:test-wallet', name: 'Test' },
     proof: {
       type: 'DataIntegrityProof',
@@ -51,11 +52,22 @@ describe('CredentialController', () => {
 
   describe('issueCredential', () => {
     it('should issue a credential', async () => {
-      const body = { type: 'TestCredential', claims: { name: 'Test' } };
+      const body = {
+        type: 'TestCredential',
+        claims: { name: 'Test' },
+        validFrom: '2024-01-01T00:00:00Z',
+        validUntil: '2025-01-01T00:00:00Z',
+      };
 
       const result = await controller.issueCredential('test-wallet', body);
 
-      expect(credentialService.issue).toHaveBeenCalledWith('test-wallet', 'TestCredential', { name: 'Test' });
+      expect(credentialService.issue).toHaveBeenCalledWith(
+        'test-wallet',
+        'TestCredential',
+        { name: 'Test' },
+        '2024-01-01T00:00:00Z',
+        '2025-01-01T00:00:00Z',
+      );
       expect(result).toEqual(mockCredential);
     });
   });

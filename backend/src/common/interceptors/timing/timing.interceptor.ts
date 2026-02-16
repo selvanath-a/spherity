@@ -3,7 +3,7 @@ import { Observable, tap } from 'rxjs';
 
 @Injectable()
 export class TimingInterceptor implements NestInterceptor {
-  intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
+  intercept(context: ExecutionContext, next: CallHandler<unknown>): Observable<unknown> {
     const start = Date.now();
 
     return next.handle().pipe(tap(() => {
