@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import type { Credential } from "@/lib/api";
+import { Credential } from "@/lib/schemas/credential";
 import { Copy } from "lucide-react";
 import { Button } from "../ui/Button";
 import { cn } from "@/lib/cn";
@@ -20,7 +20,7 @@ export function CredentialRawJson({ credential, separatePage = false }: Props) {
   return (
     <div className="mt-5">
       <div className="flex items-center ">
-        <p className="text-[11px] uppercase tracking-[0.08em] text-ink">
+        <p className="text-[11px] uppercase tracking-[0.08em] text-ink font-bold">
           Raw Data
         </p>
         <Button

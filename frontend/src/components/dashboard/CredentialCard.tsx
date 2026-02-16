@@ -3,7 +3,7 @@
 import { memo } from "react";
 import Link from "next/link";
 import { ExternalLink } from "lucide-react";
-import { Credential } from "@/models/credential.model";
+import { Credential } from "@/lib/schemas/credential";
 import { formatDate, getDisplayType, isExpired } from "@/utils";
 import { CredentialActions } from "./CredentialActions";
 

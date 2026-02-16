@@ -134,7 +134,11 @@ describe('CryptoService', () => {
       const signature = service.sign(originalData, keyPair.privateKey);
       const tamperedData = { message: 'tampered' };
 
-      const isValid = service.verify(tamperedData, signature, keyPair.publicKey);
+      const isValid = service.verify(
+        tamperedData,
+        signature,
+        keyPair.publicKey,
+      );
 
       expect(isValid).toBe(false);
     });
@@ -143,7 +147,11 @@ describe('CryptoService', () => {
       const keyPair = service.generateKeyPair();
       const data = { message: 'test' };
 
-      const isValid = service.verify(data, 'invalid-signature', keyPair.publicKey);
+      const isValid = service.verify(
+        data,
+        'invalid-signature',
+        keyPair.publicKey,
+      );
 
       expect(isValid).toBe(false);
     });
@@ -214,7 +222,11 @@ describe('CryptoService', () => {
       const signature = service.sign({ a: 1, b: 2 }, keyPair.privateKey);
 
       // Verify with different property order
-      const isValid = service.verify({ b: 2, a: 1 }, signature, keyPair.publicKey);
+      const isValid = service.verify(
+        { b: 2, a: 1 },
+        signature,
+        keyPair.publicKey,
+      );
 
       expect(isValid).toBe(true);
     });
@@ -238,7 +250,9 @@ describe('CryptoService', () => {
 
       // Attacker tries to use same signature with modified data
       const tamperedData = { id: '123', amount: 1000000 };
-      expect(service.verify(tamperedData, signature, keyPair.publicKey)).toBe(false);
+      expect(service.verify(tamperedData, signature, keyPair.publicKey)).toBe(
+        false,
+      );
     });
 
     it('should reject signature with flipped bits', () => {
@@ -273,7 +287,9 @@ describe('CryptoService', () => {
       const keyPair = service.generateKeyPair();
       const data = { message: 'test' };
 
-      expect(service.verify(data, 'ghijklmnop'.repeat(13), keyPair.publicKey)).toBe(false);
+      expect(
+        service.verify(data, 'ghijklmnop'.repeat(13), keyPair.publicKey),
+      ).toBe(false);
     });
   });
 });

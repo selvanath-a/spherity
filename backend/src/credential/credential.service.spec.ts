@@ -139,7 +139,10 @@ describe('CredentialService', () => {
       const mockStore = { credentials: [] };
       mockFs.readFile.mockResolvedValue(JSON.stringify(mockStore));
 
-      const result = await service.getCredentialById('test-wallet', 'non-existent');
+      const result = await service.getCredentialById(
+        'test-wallet',
+        'non-existent',
+      );
 
       expect(result).toBeUndefined();
     });
@@ -184,7 +187,9 @@ describe('CredentialService', () => {
       const mockStore = { credentials: [] };
       mockFs.readFile.mockResolvedValue(JSON.stringify(mockStore));
 
-      await expect(service.deleteCredential('test-wallet', 'non-existent')).rejects.toThrow();
+      await expect(
+        service.deleteCredential('test-wallet', 'non-existent'),
+      ).rejects.toThrow();
     });
   });
 
@@ -248,7 +253,7 @@ describe('CredentialService', () => {
           credentialSubject: { id: 'did:test:subject', name: 'Alice', age: 30 },
           // Note: proof is NOT included in the credential data
         },
-        'actual-signature-value' // proofValue passed separately
+        'actual-signature-value', // proofValue passed separately
       );
     });
 

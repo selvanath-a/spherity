@@ -1,25 +1,24 @@
 "use client";
 
-import Link from "next/link";
+import { Alert, AlertState } from "@/components/ui/Alert";
+import {
+  deleteCredential,
+  listCredentials,
+  verifyCredentialById,
+} from "@/lib/api";
+import { Credential } from "@/lib/schemas/credential";
+import { Search } from "lucide-react";
 import {
   useCallback,
   useEffect,
   useMemo,
   useState,
 } from "react";
-import { Search } from "lucide-react";
-import { Alert, AlertState } from "@/components/ui/Alert";
+import { CredentialDetailPanel } from "./CredentialDetailPanel";
+import { CredentialsList } from "./CredentialsList";
 import { DashboardTitle } from "./DashboardTitle";
 import { EmptyCredentials } from "./EmptyCredentials";
-import { CredentialsList } from "./CredentialsList";
 import { SummaryRow } from "./SummaryRow";
-import { CredentialDetailPanel } from "./CredentialDetailPanel";
-import {
-  type Credential,
-  listCredentials,
-  deleteCredential,
-  verifyCredentialById,
-} from "@/lib/api";
 export default function DashboardClient() {
   const [credentials, setCredentials] = useState<Credential[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);

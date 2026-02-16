@@ -11,7 +11,8 @@ import { APP_GUARD } from '@nestjs/core';
  * Configures the wallet middleware globally and imports feature modules.
  */
 @Module({
-  imports: [CredentialModule,
+  imports: [
+    CredentialModule,
     // Global rate limiting (ttl in ms for @nestjs/throttler v6).
     ThrottlerModule.forRoot({
       throttlers: [
@@ -20,12 +21,16 @@ import { APP_GUARD } from '@nestjs/core';
           limit: 30,
         },
       ],
-    })],
+    }),
+  ],
   controllers: [AppController],
-  providers: [{
-    provide: APP_GUARD,
-    useClass: ThrottlerGuard
-  }, AppService],
+  providers: [
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
+    },
+    AppService,
+  ],
 })
 export class AppModule implements NestModule {
   /**

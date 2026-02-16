@@ -1,4 +1,4 @@
-import { Credential } from "./models/credential.model";
+import { Credential } from "@/lib/schemas/credential";
 
 export function getDisplayType(vc: Credential): string {
     // Returns the last type in the array as it's usually the most specific one

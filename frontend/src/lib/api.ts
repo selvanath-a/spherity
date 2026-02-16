@@ -1,10 +1,15 @@
+import {
+    credentialSchema,
+    deleteResultSchema,
+    verifyResultSchema,
+    type Credential,
+} from "@/lib/schemas/credential";
+
 /**
  * API client for communicating with the Verifiable Credentials backend.
  * All requests include credentials to maintain wallet identity via cookies.
  * @module api
  */
-import type { Credential } from "@/models/credential.model";
-
 export type { Credential };
 
 /** Backend server URL, configurable via NEXT_PUBLIC_BACKEND_URL environment variable */
@@ -55,7 +60,7 @@ export async function issueCredential(
     if (!res.ok) {
         throw new Error(`Failed to issue credential: ${res.statusText}`);
     }
-    return res.json();
+    return credentialSchema.parse(await res.json());
 }
 
 /**
@@ -70,7 +75,7 @@ export async function listCredentials(): Promise<Credential[]> {
     if (!res.ok) {
         throw new Error(`Failed to list credentials: ${res.statusText}`);
     }
-    return res.json();
+    return credentialSchema.array().parse(await res.json());
 }
 
 /**
@@ -86,7 +91,7 @@ export async function getCredential(id: string): Promise<Credential> {
     if (!res.ok) {
         throw new Error(`Failed to get credential: ${res.statusText}`);
     }
-    return res.json();
+    return credentialSchema.parse(await res.json());
 }
 
 /**
@@ -102,7 +107,7 @@ export async function verifyCredentialById(id: string): Promise<VerifyResult> {
     if (!res.ok) {
         throw new Error(`Failed to verify credential: ${res.statusText}`);
     }
-    return res.json();
+    return verifyResultSchema.parse(await res.json());
 }
 
 /**
@@ -115,16 +120,17 @@ export async function verifyCredentialById(id: string): Promise<VerifyResult> {
 export async function verifyCredential(
     credential: Credential
 ): Promise<VerifyResult> {
+    const parsedCredential = credentialSchema.parse(credential);
     const res = await fetch(`${BACKEND_URL}/credential/verify`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({ credential }),
+        body: JSON.stringify({ credential: parsedCredential }),
     });
     if (!res.ok) {
         throw new Error(`Failed to verify credential: ${res.statusText}`);
     }
-    return res.json();
+    return verifyResultSchema.parse(await res.json());
 }
 
 /**
@@ -141,7 +147,7 @@ export async function deleteCredential(id: string): Promise<{ deleted: boolean; 
     if (!res.ok) {
         throw new Error(`Failed to delete credential: ${res.statusText}`);
     }
-    return res.json();
+    return deleteResultSchema.parse(await res.json());
 }
 
 /**
@@ -163,7 +169,7 @@ export function tryRepairJson(input: string): string {
         const parsed = JSON.parse(json);
         // If it has a credential property, extract just the credential
         if (parsed && typeof parsed === 'object' && 'credential' in parsed) {
-            return JSON.stringify(parsed.credential);
+            return JSON.stringify((parsed as { credential: unknown }).credential);
         }
         return json;
     } catch {
@@ -185,7 +191,7 @@ export function tryRepairJson(input: string): string {
         const parsed = JSON.parse(json);
         // If it has a credential property, extract just the credential
         if (parsed && typeof parsed === 'object' && 'credential' in parsed) {
-            return JSON.stringify(parsed.credential);
+            return JSON.stringify((parsed as { credential: unknown }).credential);
         }
         return json;
     } catch {

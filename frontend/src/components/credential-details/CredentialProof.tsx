@@ -1,4 +1,4 @@
-import type { Credential } from "@/lib/api";
+import { Credential } from "@/lib/schemas/credential";
 import { ShieldCheck } from "lucide-react";
 
 type Props = { credential: Credential };

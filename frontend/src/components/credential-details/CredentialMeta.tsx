@@ -1,4 +1,4 @@
-import type { Credential } from "@/lib/api";
+import { Credential } from "@/lib/schemas/credential";
 import { formatDate, isExpired } from "@/utils";
 
 type Props = { credential: Credential };

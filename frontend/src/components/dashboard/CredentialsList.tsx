@@ -1,4 +1,4 @@
-import { Credential } from "@/models/credential.model";
+import { Credential } from "@/lib/schemas/credential";
 import { CredentialCard } from "./CredentialCard";
 
 type CredentialsListProps = {

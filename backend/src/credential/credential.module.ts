@@ -11,6 +11,6 @@ import { IssuerService } from 'src/issuer/issuer.service';
  */
 @Module({
   controllers: [CredentialController],
-  providers: [CredentialService, CryptoService, IssuerService]
+  providers: [CredentialService, CryptoService, IssuerService],
 })
 export class CredentialModule {}

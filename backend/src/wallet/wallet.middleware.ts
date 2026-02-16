@@ -1,6 +1,7 @@
 import { Injectable, NestMiddleware } from '@nestjs/common';
 import { Request, Response, NextFunction } from 'express';
 import { randomUUID } from 'crypto';
+import { RequestWithWalletId } from 'src/common/types/request-with-wallet-id.type';
 
 /**
  * Middleware that manages wallet identity via HTTP cookies.
@@ -18,11 +19,11 @@ export class WalletMiddleware implements NestMiddleware {
    * @param next - Next middleware function
    */
   use(req: Request, res: Response, next: NextFunction) {
-    let walletId = req.cookies?.walletId;
+    const request = req as RequestWithWalletId;
 
-    if (!walletId) {
-      walletId = randomUUID();
-
+    const walletIdFromCookie = request.cookies?.walletId;
+    const walletId = walletIdFromCookie ?? randomUUID();
+    if (!walletIdFromCookie) {
       res.cookie('walletId', walletId, {
         httpOnly: true,
         sameSite: 'none',
@@ -30,7 +31,7 @@ export class WalletMiddleware implements NestMiddleware {
       });
     }
 
-    (req as Request & { walletId?: string }).walletId = walletId;
+    request.walletId = walletId;
     next();
   }
 }

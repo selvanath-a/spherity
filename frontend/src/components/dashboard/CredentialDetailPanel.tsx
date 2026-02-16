@@ -1,13 +1,13 @@
 "use client";
 
-import type { Credential } from "@/lib/api";
-import { ExternalLink, LayoutList, ShieldCheck } from "lucide-react";
+import { Credential } from "@/lib/schemas/credential";
+import { getDisplayType } from "@/utils";
+import { ExternalLink, LayoutList } from "lucide-react";
 import Link from "next/link";
-import { CredentialActions } from "./CredentialActions";
-import { formatDate, getDisplayType, isExpired } from "@/utils";
 import { CredentialMeta } from "../credential-details/CredentialMeta";
 import { CredentialProof } from "../credential-details/CredentialProof";
 import { CredentialRawJson } from "../credential-details/CredentialRawJson";
+import { CredentialActions } from "./CredentialActions";
 
 type CredentialDetailPanelProps = {
   credential?: Credential;

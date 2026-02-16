@@ -62,19 +62,24 @@ export default function CredentialDetailPage({
         <h1 className="font-liberation-serif text-2xl text-text">
           Credential Details
         </h1>
-        <Link href="/" className="btn btn-outline">
+        <Link href="/" className="btn btn-outline font-liberation-serif ">
           ← Back to Dashboard
         </Link>
       </div>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
         <section className="lg:col-span-7 rounded-2xl border border-border bg-white p-6 h-fit">
-          <div className="mb-4">{getDisplayType(credential)}</div>
+          <div className="mb-4">
+            {" "}
+            <h3 className="text-xl font-semibold text-text font-liberation-serif">
+              {getDisplayType(credential)}
+            </h3>
+          </div>
           <CredentialMeta credential={credential} />
           <CredentialProof credential={credential} />
         </section>
 
-        <section className="lg:col-span-5 rounded-2xl border border-border bg-white p-6">
+        <section className="lg:col-span-5 rounded-2xl border border-border bg-white px-6 pb-6">
           <CredentialRawJson credential={credential} separatePage={true} />
         </section>
       </div>
