@@ -1,140 +1,115 @@
 "use client";
 
 import { Alert, AlertState } from "@/components/ui/Alert";
-import {
-  deleteCredential,
-  listCredentials,
-  verifyCredentialById,
-} from "@/lib/api";
-import { Credential } from "@/lib/schemas/credential";
+import { useCredentialsQuery } from "@/hooks/useCredentialsQuery";
+import { useDeleteCredentialMutation } from "@/hooks/useDeleteCredentialMutation";
+import { useVerifyCredentialByIdMutation } from "@/hooks/useVerifyCredentialMutation";
 import { Search } from "lucide-react";
-import {
-  useCallback,
-  useEffect,
-  useMemo,
-  useState,
-} from "react";
+import { useMemo, useState } from "react";
 import { CredentialDetailPanel } from "./CredentialDetailPanel";
 import { CredentialsList } from "./CredentialsList";
 import { DashboardTitle } from "./DashboardTitle";
 import { EmptyCredentials } from "./EmptyCredentials";
 import { SummaryRow } from "./SummaryRow";
+
 export default function DashboardClient() {
-  const [credentials, setCredentials] = useState<Credential[]>([]);
+  // const [credentials, setCredentials] = useState<Credential[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [alert, setAlert] = useState<AlertState>(null);
   const [query, setQuery] = useState("");
   const [queryInput, setQueryInput] = useState("");
+  const {
+    data: credentials = [],
+    isLoading,
+    error: listError,
+  } = useCredentialsQuery();
+  const deleteMutation = useDeleteCredentialMutation();
+  const verifyMutation = useVerifyCredentialByIdMutation();
+  const listErrorMessage =
+    listError instanceof Error
+      ? listError.message
+      : "Failed loading credentials";
+
+  const total = credentials.length;
+
+  const credentialById = useMemo(
+    () => new Map(credentials.map((c) => [c.id, c])),
+    [credentials],
+  );
+
+  const displayedCredentials = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    if (!q) return credentials;
+    return credentials.filter(
+      (c) =>
+        c.type.join(" ").toLowerCase().includes(q) ||
+        c.issuer.toLowerCase().includes(q) ||
+        JSON.stringify(c.credentialSubject).toLowerCase().includes(q),
+    );
+  }, [credentials, query]);
+
+  const selectedCredential = useMemo(
+    () => (selectedId ? credentialById.get(selectedId) : undefined),
+    [credentialById, selectedId],
+  );
+
+  const handleSelect = (id: string) => {
+    setSelectedId(id);
+    setDetailsOpen(true);
+  };
+
   
-  useEffect(() => {
-    listCredentials()
-      .then(setCredentials)
-      .catch((err) => {
-        setAlert({
-          variant: "error",
-          message:
-            err instanceof Error ? err.message : "Failed loading credentials",
-        });
+  const handleDelete = async (id: string) => {
+    try {
+      await  deleteMutation.mutateAsync(id);
+      if (selectedId === id) {
+        setSelectedId(null);
+        setDetailsOpen(false);
+      }
+      setAlert({ variant: "success", message: "Credential deleted" });
+    } catch (err) {
+      setAlert({
+        variant: "error",
+        message:
+          err instanceof Error ? err.message : "Failed to delete credential",
       });
-  }, [setAlert]);
+    }
+  };
 
-const total = credentials.length;
-
-const credentialById = useMemo(
-  () => new Map(credentials.map((c) => [c.id, c])),
-  [credentials],
-);
-
-const displayedCredentials = useMemo(() => {
-  const q = query.trim().toLowerCase();
-  if (!q) return credentials;
-  return credentials.filter((c) =>
-    c.type.join(" ").toLowerCase().includes(q) ||
-    c.issuer.toLowerCase().includes(q) ||
-    JSON.stringify(c.credentialSubject).toLowerCase().includes(q),
-  );
-}, [credentials, query]);
-
-const selectedCredential = useMemo(
-  () => (selectedId ? credentialById.get(selectedId) : undefined),
-  [credentialById, selectedId],
-);
-
-const handleSelect = useCallback((id: string) => {
-  setSelectedId(id);
-  setDetailsOpen(true);
-}, []);
-
-const remove = useCallback(async (id: string) => {
-  await deleteCredential(id);
-  setCredentials((prev) => prev.filter((c) => c.id !== id));
-}, []);
-
-const verify = useCallback((id: string) => verifyCredentialById(id), []);
-
-
-  const handleDelete = useCallback(
-    async (id: string) => {
-      try {
-        await remove(id);
-        if (selectedId === id) {
-          setSelectedId(null);
-          setDetailsOpen(false);
-        }
-        setAlert({ variant: "success", message: "Credential deleted" });
-      } catch (err) {
+  const handleVerify = async (id: string) => {
+    try {
+      const result = await verifyMutation.mutateAsync(id);
+      if (result.valid) {
+        setAlert({ variant: "success", message: "Credential is valid" });
+      } else {
         setAlert({
           variant: "error",
-          message:
-            err instanceof Error ? err.message : "Failed to delete credential",
+          message: result.reason ?? "Credential is invalid",
         });
       }
-    },
-    [remove, selectedId, setAlert],
-  );
+    } catch (err) {
+      setAlert({
+        variant: "error",
+        message: err instanceof Error ? err.message : "Verification failed",
+      });
+    }
+  };
 
-  const handleVerify = useCallback(
-    async (id: string) => {
-      try {
-        const result = await verify(id);
-        if (result.valid) {
-          setAlert({ variant: "success", message: "Credential is valid" });
-        } else {
-          setAlert({
-            variant: "error",
-            message: result.reason ?? "Credential is invalid",
-          });
-        }
-      } catch (err) {
-        setAlert({
-          variant: "error",
-          message: err instanceof Error ? err.message : "Verification failed",
-        });
-      }
-    },
-    [setAlert, verify],
-  );
+  const handleShare = async (id: string) => {
+    const credential = credentialById.get(id);
+    if (!credential) {
+      setAlert({ variant: "error", message: "Credential not found" });
+      return;
+    }
 
-  const handleShare = useCallback(
-    async (id: string) => {
-      const credential = credentialById.get(id);
-      if (!credential) {
-        setAlert({ variant: "error", message: "Credential not found" });
-        return;
-      }
-
-      try {
-        await navigator.clipboard.writeText(
-          JSON.stringify(credential, null, 2),
-        );
-        setAlert({ variant: "success", message: "Credential JSON copied" });
-      } catch {
-        setAlert({ variant: "error", message: "Copy failed" });
-      }
-    },
-    [credentialById, setAlert],
-  );
+    try {
+      await navigator.clipboard.writeText(JSON.stringify(credential, null, 2));
+      setAlert({ variant: "success", message: "Credential JSON copied" });
+    } catch {
+      setAlert({ variant: "error", message: "Copy failed" });
+    }
+  };
 
   return (
     <div className="mx-auto  px-4 pb-8 pt-6 md:px-6 lg:px-8">
@@ -164,7 +139,15 @@ const verify = useCallback((id: string) => verifyCredentialById(id), []);
               </div>
             </div>
 
-            {displayedCredentials.length === 0 ? (
+            {listError ? (
+              <div className="rounded-xl border border-[#efcdcd] bg-[#fff4f4] p-4 text-sm text-[#b53f3f]">
+                {listErrorMessage}
+              </div>
+            ) : isLoading ? (
+              <div className="rounded-xl border border-border bg-white p-4 text-sm text-ink">
+                Loading credentials...
+              </div>
+            ) : displayedCredentials.length === 0 ? (
               <EmptyCredentials />
             ) : (
               <CredentialsList

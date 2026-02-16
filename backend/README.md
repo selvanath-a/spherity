@@ -84,11 +84,11 @@ curl http://localhost:3001/credential/{id}/verify -b cookies.txt
 ## Seed Data
 
 ```bash
-# Default: wallet "seed-wallet", 100 credentials
+# Default: wallet "seed-wallet", 10 credentials
 pnpm seed
 
 # Custom wallet and count
-pnpm seed my-wallet 250
+pnpm seed my-wallet 25
 ```
 
 ## Testing

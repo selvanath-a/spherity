@@ -3,10 +3,10 @@
 import { CredentialMeta } from "@/components/credential-details/CredentialMeta";
 import { CredentialProof } from "@/components/credential-details/CredentialProof";
 import { CredentialRawJson } from "@/components/credential-details/CredentialRawJson";
-import { getCredential, type Credential } from "@/lib/api";
+import { useCredentialQuery } from "@/hooks/useCredentialQuery";
 import { getDisplayType } from "@/utils";
 import Link from "next/link";
-import { use, useEffect, useState } from "react";
+import { use } from "react";
 
 /**
  * Detail page displaying a single credential's full information.
@@ -19,27 +19,9 @@ export default function CredentialDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = use(params);
-  const [credential, setCredential] = useState<Credential | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { data: credential, isLoading, error } = useCredentialQuery(id);
 
-  useEffect(() => {
-    async function load() {
-      try {
-        const data = await getCredential(id);
-        setCredential(data);
-      } catch (err) {
-        setError(
-          err instanceof Error ? err.message : "Failed loading credential",
-        );
-      } finally {
-        setLoading(false);
-      }
-    }
-    load();
-  }, [id]);
-
-  if (loading) {
+  if (isLoading) {
     return <div className="loading">Loading credential...</div>;
   }
 
@@ -47,7 +29,7 @@ export default function CredentialDetailPage({
     return (
       <div className="mx-auto w-full max-w-6xl px-4 pb-8 pt-6 md:px-6 lg:px-8">
         <div className="alert alert-error">
-          {error ?? "Credential not found"}
+          {error instanceof Error ? error.message : "Credential not found"}
         </div>
         <Link href="/" className="btn btn-outline">
           ← Back to Dashboard

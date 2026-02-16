@@ -3,6 +3,7 @@ import localFont from "next/font/local";
 import "./globals.css";
 import { HeaderBar } from "@/components/HeaderBar";
 import { OfflineBanner } from "@/components/OfflineBanner";
+import { QueryProvider } from "@/components/providers/QueryProvider";
 
 const ptSerif = localFont({
   src: [
@@ -87,9 +88,11 @@ export default function RootLayout({
       <body
         className={`${ptSerif.variable} ${liberationSerif.variable} ${liberationSans.variable} ${nimbusMono.variable} antialiased bg-background text-text min-h-screen`}
       >
-        <OfflineBanner />
-        <HeaderBar />
-        {children}
+        <QueryProvider>
+          <OfflineBanner />
+          <HeaderBar />
+          {children}
+        </QueryProvider>
       </body>
     </html>
   );

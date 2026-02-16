@@ -12,7 +12,7 @@ async function main() {
   const svc = new CredentialService(issuer);
 
   const walletId = process.argv[2] || 'seed-wallet';
-  const count = Number(process.argv[3] || 100);
+  const count = Number(process.argv[3] || 10);
 
   console.log(`Seeding ${count} credentials to wallet: ${walletId}`);
 

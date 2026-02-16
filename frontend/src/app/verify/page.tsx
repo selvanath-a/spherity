@@ -1,15 +1,17 @@
 "use client";
 
 import { Alert, AlertState } from "@/components/ui/Alert";
-import { tryRepairJson, verifyCredential } from "@/lib/api";
+import { tryRepairJson } from "@/lib/api";
 import { credentialSchema } from "@/lib/schemas/credential";
 import { zodIssuesToMessage } from "@/lib/schemas/error-map";
 import { useState } from "react";
+import { useVerifyCredentialMutation } from "@/hooks/useVerifyCredentialMutation";
 
 export default function VerifyPage() {
   const [credentialJson, setCredentialJson] = useState("");
-  const [loading, setLoading] = useState(false);
   const [alert, setAlert] = useState<AlertState>(null);
+  const verifyMutation = useVerifyCredentialMutation();
+  const loading = verifyMutation.isPending;
 
   const isValidJson = (() => {
     if (!credentialJson.trim()) return null;
@@ -49,8 +51,7 @@ export default function VerifyPage() {
     const credential = credentialParse.data;
 
     try {
-      setLoading(true);
-      const verifyResult = await verifyCredential(credential);
+      const verifyResult = await verifyMutation.mutateAsync(credential);
       if (!verifyResult.valid) {
         setAlert({
           variant: "error",
@@ -64,8 +65,6 @@ export default function VerifyPage() {
         variant: "error",
         message: err instanceof Error ? err.message : "Verification failed",
       });
-    } finally {
-      setLoading(false);
     }
   }
 

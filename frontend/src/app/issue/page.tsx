@@ -1,16 +1,16 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { FileSignature } from "lucide-react";
-import { issueCredential, tryRepairJson } from "@/lib/api";
-import { issueFormSchema } from "@/lib/schemas/forms";
+import { useIssueCredentialMutation } from "@/hooks/useIssueCredentialMutation";
+import { tryRepairJson } from "@/lib/api";
 import { zodIssuesToIssueFieldErrors } from "@/lib/schemas/error-map";
+import { issueFormSchema } from "@/lib/schemas/forms";
+import { FileSignature } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
 
 export default function IssuePage() {
   const router = useRouter();
 
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [type, setType] = useState("");
@@ -21,6 +21,8 @@ export default function IssuePage() {
   const [validFromError, setValidFromError] = useState<string | null>(null);
   const [validUntilError, setValidUntilError] = useState<string | null>(null);
   const [claimsError, setClaimsError] = useState<string | null>(null);
+  const issueMutation = useIssueCredentialMutation();
+const loading = issueMutation.isPending;
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -49,10 +51,9 @@ export default function IssuePage() {
     setClaimsError(null);
 
     try {
-      setLoading(true);
-
       const payload = parsed.data; // already transformed: { type, validFrom ISO, validUntil ISO, claims }
-      await issueCredential(payload);
+      // await issueCredential(payload);
+      await issueMutation.mutateAsync(payload);
 
       // await issueCredential({ type, claims, validFrom, validUntil });
       setSuccess("Credential issued.");
@@ -61,9 +62,7 @@ export default function IssuePage() {
       const message =
         err instanceof Error ? err.message : "Failed to issue credential";
       setError(message);
-    } finally {
-      setLoading(false);
-    }
+    } 
   }
 
   return (
