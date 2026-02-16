@@ -22,6 +22,13 @@ export const issueFormSchema = z
           path: ["claimsJson"],
           message: "Claims must be a JSON object",
         });
+      } else if (Object.hasOwn(parsed, "id")) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["claimsJson"],
+          message:
+            "Claims must not include id; credentialSubject.id is system-managed",
+        });
       }
     } catch {
       ctx.addIssue({

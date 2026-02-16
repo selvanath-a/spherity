@@ -61,6 +61,20 @@ describe('CredentialService', () => {
       expect(result.proof.cryptosuite).toBe('ed25519-2020');
       expect(issuerService.sign).toHaveBeenCalled();
     });
+
+    it('should reject claims containing reserved id field', async () => {
+      await expect(
+        service.issue(
+          'test-wallet',
+          'TestCredential',
+          { id: 1, name: 'John' },
+          '2024-01-01T00:00:00Z',
+          '2025-01-01T00:00:00Z',
+        ),
+      ).rejects.toThrow(
+        'claims must not include "id"; credentialSubject.id is system-managed',
+      );
+    });
   });
 
   describe('getCredentialsList', () => {

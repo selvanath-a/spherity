@@ -53,32 +53,6 @@ The server runs on `http://localhost:3001` by default.
 | `POST` | `/credential/verify` | Verify credential object |
 | `DELETE` | `/credential/:id` | Delete credential |
 
-### Issue Credential
-
-```bash
-curl -X POST http://localhost:3001/credential/issue \
-  -H "Content-Type: application/json" \
-  -c cookies.txt -b cookies.txt \
-  -d '{
-    "type": "VerifiableCredential",
-    "claims": {"name": "John Doe"},
-    "validFrom": "2026-02-16T00:00:00.000Z",
-    "validUntil": "2027-02-16T00:00:00.000Z"
-  }'
-```
-
-### List Credentials
-
-```bash
-curl http://localhost:3001/credential/list -b cookies.txt
-```
-
-### Verify Credential
-
-```bash
-curl http://localhost:3001/credential/{id}/verify -b cookies.txt
-```
-
 `validFrom` and `validUntil` are required ISO-8601 timestamps for issuance.
 
 ## Seed Data

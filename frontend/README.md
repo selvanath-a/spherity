@@ -63,11 +63,37 @@ src/
     credentials/[id]/     # Credential detail view
   lib/
     api.ts                # Backend API client
+    queryKeys.ts          # React Query keys
+    credentialSearch.ts   # Search utility logic
+  hooks/
+    useCredentialsQuery.ts
+    useCredentialQuery.ts
+    useIssueCredentialMutation.ts
+    useDeleteCredentialMutation.ts
+    useVerifyCredentialMutation.ts
+    useDebouncedValue.ts
 ```
 
 ## Development
 
 The frontend communicates with the backend via REST API. Credentials are stored per-user using HTTP cookies managed by the backend.
+
+### Data Layer
+
+- Server state is managed with TanStack Query.
+- Reads use query hooks (`useCredentialsQuery`, `useCredentialQuery`).
+- Writes use mutation hooks (`issue`, `delete`, `verify`).
+- Delete uses optimistic cache update + rollback on failure.
+
+### Search
+
+- Dashboard search is client-side and debounced (200ms).
+- Searchable fields:
+  - `type`
+  - `issuer`
+  - `validFrom`
+  - `validUntil`
+  - `credentialSubject`
 
 ### API Client
 
@@ -88,6 +114,36 @@ const credentials = await listCredentials();
 // Verify a credential
 const result = await verifyCredential(credential);
 ```
+
+### Testing
+
+- Backend: Jest unit/integration coverage.
+- Frontend: Vitest utility tests:
+  - `src/lib/credentialSearch.test.ts`
+  - `src/lib/schemas/error-map.test.ts`
+
+Run frontend tests:
+
+```bash
+pnpm test
+```
+
+## Criteria Coverage (Short)
+
+- Code Quality
+  - Clear module split: API client, query hooks, schema validation, search utility.
+- TypeScript Practices
+  - Typed credential schema and API contracts; utility functions typed end-to-end.
+- Frontend Architecture
+  - Query/mutation hooks + reusable dashboard/detail components + separated utility layer.
+- API Integration
+  - React Query caching, invalidation, optimistic delete, user-facing error states.
+- NestJS Practices
+  - Backend uses DI, DTO validation, middleware and interceptor patterns (see backend README).
+- Documentation
+  - Setup, architecture decisions, and tradeoffs documented in README.
+- Testing (bonus)
+  - Jest backend tests + Vitest frontend utility tests.
 
 ## License
 

@@ -1,9 +1,11 @@
 "use client";
 
 import { Alert, AlertState } from "@/components/ui/Alert";
+import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 import { useCredentialsQuery } from "@/hooks/useCredentialsQuery";
 import { useDeleteCredentialMutation } from "@/hooks/useDeleteCredentialMutation";
 import { useVerifyCredentialByIdMutation } from "@/hooks/useVerifyCredentialMutation";
+import { filterCredentials } from "@/lib/credentialSearch";
 import { Search } from "lucide-react";
 import { useMemo, useState } from "react";
 import { CredentialDetailPanel } from "./CredentialDetailPanel";
@@ -17,8 +19,8 @@ export default function DashboardClient() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [alert, setAlert] = useState<AlertState>(null);
-  const [query, setQuery] = useState("");
   const [queryInput, setQueryInput] = useState("");
+  const debouncedQuery = useDebouncedValue(queryInput, 200);
   const {
     data: credentials = [],
     isLoading,
@@ -38,16 +40,10 @@ export default function DashboardClient() {
     [credentials],
   );
 
-  const displayedCredentials = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    if (!q) return credentials;
-    return credentials.filter(
-      (c) =>
-        c.type.join(" ").toLowerCase().includes(q) ||
-        c.issuer.toLowerCase().includes(q) ||
-        JSON.stringify(c.credentialSubject).toLowerCase().includes(q),
-    );
-  }, [credentials, query]);
+  const displayedCredentials = useMemo(
+    () => filterCredentials(credentials, debouncedQuery),
+    [credentials, debouncedQuery],
+  );
 
   const selectedCredential = useMemo(
     () => (selectedId ? credentialById.get(selectedId) : undefined),
@@ -130,9 +126,7 @@ export default function DashboardClient() {
                   className="w-full px-2 font-liberation-sans text-placeholder-text text-sm border-0 outline-none"
                   value={queryInput}
                   onChange={(e) => {
-                    const value = e.target.value;
-                    setQueryInput(value);
-                    setQuery(value);
+                    setQueryInput(e.target.value);
                   }}
                 />
                 <Search size={16} color="var(--ink)" />

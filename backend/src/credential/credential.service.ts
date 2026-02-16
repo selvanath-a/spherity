@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { randomUUID } from 'crypto';
 import * as fs from 'fs/promises';
 import path from 'path';
@@ -104,8 +108,9 @@ export class CredentialService {
       validFrom: start.toISOString(),
       validUntil: end.toISOString(),
       credentialSubject: {
-        id: subjectDid,
         ...claims,
+        // Keep holder DID authoritative; never let claims override it.
+        id: subjectDid,
       },
     };
   }
@@ -126,6 +131,11 @@ export class CredentialService {
     validFrom: string,
     validUntil: string,
   ): Promise<Credential> {
+    if (Object.hasOwn(claims, 'id')) {
+      throw new BadRequestException(
+        'claims must not include "id"; credentialSubject.id is system-managed',
+      );
+    }
     const vcWallet = await this.loadWallet(walletId);
     const credentialUnsigned = this.buildUnsignedCredential(
       this.issuerService.getIssuerDid(),
