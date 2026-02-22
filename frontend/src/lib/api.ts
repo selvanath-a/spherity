@@ -24,9 +24,9 @@ export interface IssueCredentialRequest {
     type: string;
     /** Key-value pairs of claims to include */
     claims: Record<string, unknown>;
-
+    /** Credential Valid From Date */
     validFrom: string;
-
+    /** Credential Expiry Date */
     validUntil: string;
 }
 
@@ -150,52 +150,3 @@ export async function deleteCredential(id: string): Promise<{ deleted: boolean; 
     return deleteResultSchema.parse(await res.json());
 }
 
-/**
- * Attempts to repair common JSON issues before parsing.
- * Handles issues commonly encountered when users copy-paste JSON:
- * - Extracts credential object if wrapped in `{ credential: ... }`
- * - Replaces single quotes with double quotes
- * - Removes trailing commas before `}` or `]`
- * - Strips JavaScript-style comments
- *
- * @param input - Raw JSON string that may contain formatting issues
- * @returns Cleaned JSON string ready for parsing
- */
-export function tryRepairJson(input: string): string {
-    let json = input.trim();
-
-    // Try to parse as-is first
-    try {
-        const parsed = JSON.parse(json);
-        // If it has a credential property, extract just the credential
-        if (parsed && typeof parsed === 'object' && 'credential' in parsed) {
-            return JSON.stringify((parsed as { credential: unknown }).credential);
-        }
-        return json;
-    } catch {
-        // Continue with repairs
-    }
-
-    // Replace single quotes with double quotes (common copy-paste issue)
-    json = json.replace(/'/g, '"');
-
-    // Remove trailing commas before } or ]
-    json = json.replace(/,\s*([\}\]])/g, '$1');
-
-    // Remove JavaScript-style comments
-    json = json.replace(/\/\/.*$/gm, '');
-    json = json.replace(/\/\*[\s\S]*?\*\//g, '');
-
-    // Try to parse after repairs
-    try {
-        const parsed = JSON.parse(json);
-        // If it has a credential property, extract just the credential
-        if (parsed && typeof parsed === 'object' && 'credential' in parsed) {
-            return JSON.stringify((parsed as { credential: unknown }).credential);
-        }
-        return json;
-    } catch {
-        // Return the attempted repairs, let caller handle parse error
-        return json;
-    }
-}

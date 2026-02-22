@@ -13,13 +13,14 @@ import { CredentialsList } from "./CredentialsList";
 import { DashboardTitle } from "./DashboardTitle";
 import { EmptyCredentials } from "./EmptyCredentials";
 import { SummaryRow } from "./SummaryRow";
+import { useOnlineStatus } from "@/hooks/useOnlineStatus";
 
 export default function DashboardClient() {
-  // const [credentials, setCredentials] = useState<Credential[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [alert, setAlert] = useState<AlertState>(null);
   const [queryInput, setQueryInput] = useState("");
+  const isOnline = useOnlineStatus();
   const debouncedQuery = useDebouncedValue(queryInput, 200);
   const {
     data: credentials = [],
@@ -28,12 +29,14 @@ export default function DashboardClient() {
   } = useCredentialsQuery();
   const deleteMutation = useDeleteCredentialMutation();
   const verifyMutation = useVerifyCredentialByIdMutation();
+
   const listErrorMessage =
     listError instanceof Error
       ? listError.message
       : "Failed loading credentials";
 
   const total = credentials.length;
+  const walletId = credentials[0]?.credentialSubject?.id ?? "Not available";
 
   const credentialById = useMemo(
     () => new Map(credentials.map((c) => [c.id, c])),
@@ -55,13 +58,18 @@ export default function DashboardClient() {
     setDetailsOpen(true);
   };
 
-  
   const handleDelete = async (id: string) => {
+    if (!isOnline) {
+      setAlert({
+        variant: "error",
+        message: "Delete requires internet connection",
+      });
+      return;
+    }
     try {
-      await  deleteMutation.mutateAsync(id);
+      await deleteMutation.mutateAsync(id);
       if (selectedId === id) {
-        setSelectedId(null);
-        setDetailsOpen(false);
+        handleModalClose();
       }
       setAlert({ variant: "success", message: "Credential deleted" });
     } catch (err) {
@@ -74,6 +82,13 @@ export default function DashboardClient() {
   };
 
   const handleVerify = async (id: string) => {
+    if (!isOnline) {
+      setAlert({
+        variant: "error",
+        message: "Verify requires internet connection",
+      });
+      return;
+    }
     try {
       const result = await verifyMutation.mutateAsync(id);
       if (result.valid) {
@@ -106,16 +121,17 @@ export default function DashboardClient() {
       setAlert({ variant: "error", message: "Copy failed" });
     }
   };
+  const handleModalClose = () => {
+    setSelectedId(null);
+    setDetailsOpen(false);
+  };
 
   return (
     <div className="mx-auto  px-4 pb-8 pt-6 md:px-6 lg:px-8">
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
         <section className="lg:col-span-8 space-y-6">
           <DashboardTitle />
-          <SummaryRow
-            totalCredentials={total}
-            walletId="did:key:z6Mk...wallet"
-          />
+          <SummaryRow totalCredentials={total} walletId={walletId} />
 
           <div className="rounded-xl bg-background">
             <div className="sticky top-0 z-20 bg-background pb-4">
@@ -162,6 +178,7 @@ export default function DashboardClient() {
             onVerify={handleVerify}
             onShare={handleShare}
             onDelete={handleDelete}
+            onClose={handleModalClose}
           />
         </aside>
 
@@ -170,7 +187,7 @@ export default function DashboardClient() {
             <button
               type="button"
               aria-label="Close details modal"
-              className="absolute inset-0 bg-black/35 cursor-pointer"
+              className="absolute inset-0 bg-black/35"
               onClick={() => setDetailsOpen(false)}
             />
             <div
@@ -182,6 +199,7 @@ export default function DashboardClient() {
                 onVerify={handleVerify}
                 onShare={handleShare}
                 onDelete={handleDelete}
+                onClose={handleModalClose}
               />
             </div>
           </div>

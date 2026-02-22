@@ -1,15 +1,18 @@
 "use client";
 
 import { Alert, AlertState } from "@/components/ui/Alert";
-import { tryRepairJson } from "@/lib/api";
+import { tryRepairJson } from "@/utils";
 import { credentialSchema } from "@/lib/schemas/credential";
 import { zodIssuesToMessage } from "@/lib/schemas/error-map";
 import { useState } from "react";
 import { useVerifyCredentialMutation } from "@/hooks/useVerifyCredentialMutation";
+import { useOnlineStatus } from "@/hooks/useOnlineStatus";
+import Link from "next/link";
 
 export default function VerifyPage() {
   const [credentialJson, setCredentialJson] = useState("");
-  const [alert, setAlert] = useState<AlertState>(null);
+  const [alert, setAlert] = useState<AlertState>();
+  const isOnline = useOnlineStatus();
   const verifyMutation = useVerifyCredentialMutation();
   const loading = verifyMutation.isPending;
 
@@ -71,9 +74,17 @@ export default function VerifyPage() {
   return (
     <div className="mx-auto max-w-4xl px-4 pb-8 pt-6 md:px-6 lg:px-8">
       <section className="lg:col-span-8 rounded-2xl border border-border bg-white p-6">
+       <div className="flex items-center justify-between">
         <h1 className="text-2xl md:text-3xl font-liberation-serif text-text">
           Verify Credential
         </h1>
+          <Link href="/" className="btn btn-outline cursor-pointer">
+            ← Back{" "}
+            <span className="hidden min-[400px]:inline-block">
+              to Dashboard
+            </span>
+          </Link>
+          </div>
         <p className="mt-2 text-sm font-liberation-serif text-ink">
           Paste a credential JSON payload and validate its signature.
         </p>
@@ -107,6 +118,7 @@ export default function VerifyPage() {
 
         <div className="mt-4 flex flex-col items-end gap-2">
           <button
+            type="button"
             onClick={handleVerify}
             disabled={loading || !credentialJson}
             className="cursor-pointer rounded-full bg-text px-5 py-2.5 text-sm font-semibold text-background hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
@@ -115,6 +127,11 @@ export default function VerifyPage() {
           </button>
         </div>
       </section>
+      {!isOnline ? (
+        <div className="rounded-xl border border-[#efcdcd] bg-[#fff4f4] my-3 p-3 text-sm text-[#b53f3f]">
+          Verifying requires internet connection.
+        </div>
+      ) : null}
       {alert ? (
         <div className="fixed bottom-4 left-1/2 z-50 w-[min(92vw,520px)] -translate-x-1/2">
           <Alert
@@ -132,6 +149,7 @@ export default function VerifyPage() {
           </Alert>
         </div>
       ) : null}
+      
     </div>
   );
 }

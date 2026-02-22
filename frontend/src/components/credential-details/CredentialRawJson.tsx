@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { Credential } from "@/lib/schemas/credential";
 import { Copy } from "lucide-react";
-import { Button } from "../ui/Button";
 import { cn } from "@/lib/cn";
 
 type Props = { credential: Credential; separatePage?: boolean };
@@ -23,14 +22,13 @@ export function CredentialRawJson({ credential, separatePage = false }: Props) {
         <p className="text-[11px] uppercase tracking-[0.08em] text-ink font-bold">
           Raw Data
         </p>
-        <Button
+        <button
+          type="button"
           onClick={handleCopy}
-          variant="ghost"
-          size="sm"
-          className=" cursor-pointer"
+          className="cursor-pointer inline-flex items-center justify-center rounded-full p-2 text-ink hover:bg-ink/5 transition"
         >
           {copied ? "Copied!" : <Copy size={16} />}
-        </Button>
+        </button>
       </div>
 
       <pre

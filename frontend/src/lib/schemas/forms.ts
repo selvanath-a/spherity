@@ -1,5 +1,4 @@
 import { z } from "zod";
-import { credentialSchema } from "./credential";
 
 export const issueFormSchema = z
   .object({
@@ -60,4 +59,3 @@ export const verifyFormSchema = z.object({
   credentialJson: z.string().trim().min(1, "Credential JSON is required"),
 });
 
-export const parsedVerifyCredentialSchema = credentialSchema;

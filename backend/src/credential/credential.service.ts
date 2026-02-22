@@ -13,7 +13,6 @@ export interface Proof {
   created: string;
   proofPurpose: string;
   verificationMethod: string;
-  /** Identifies the signature + canonicalization suite used. */
   cryptosuite: string;
   proofValue: string;
 }
@@ -96,17 +95,14 @@ export class CredentialService {
     validFrom: string,
     validUntil: string,
   ): Omit<Credential, 'proof'> {
-    const start = new Date(validFrom);
-    const end = new Date(validUntil);
-
     // This is the canonical payload that gets signed; proof is added later.
     return {
       '@context': ['https://www.w3.org/ns/credentials/v2'],
       id: `urn:uuid:${randomUUID()}`,
       type: ['VerifiableCredential', ...types],
       issuer: issuerDid,
-      validFrom: start.toISOString(),
-      validUntil: end.toISOString(),
+      validFrom: new Date(validFrom).toISOString(),
+      validUntil: new Date(validUntil).toISOString(),
       credentialSubject: {
         ...claims,
         // Keep holder DID authoritative; never let claims override it.

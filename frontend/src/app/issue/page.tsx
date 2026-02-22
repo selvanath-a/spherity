@@ -1,16 +1,18 @@
 "use client";
 
 import { useIssueCredentialMutation } from "@/hooks/useIssueCredentialMutation";
-import { tryRepairJson } from "@/lib/api";
+import { useOnlineStatus } from "@/hooks/useOnlineStatus";
+import { tryRepairJson } from "@/utils";
 import { zodIssuesToIssueFieldErrors } from "@/lib/schemas/error-map";
 import { issueFormSchema } from "@/lib/schemas/forms";
 import { FileSignature } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import Link from "next/link";
 
 export default function IssuePage() {
   const router = useRouter();
-
+  const isOnline = useOnlineStatus();
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [type, setType] = useState("");
@@ -22,7 +24,7 @@ export default function IssuePage() {
   const [validUntilError, setValidUntilError] = useState<string | null>(null);
   const [claimsError, setClaimsError] = useState<string | null>(null);
   const issueMutation = useIssueCredentialMutation();
-const loading = issueMutation.isPending;
+  const loading = issueMutation.isPending;
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -52,25 +54,32 @@ const loading = issueMutation.isPending;
 
     try {
       const payload = parsed.data; // already transformed: { type, validFrom ISO, validUntil ISO, claims }
-      // await issueCredential(payload);
       await issueMutation.mutateAsync(payload);
 
-      // await issueCredential({ type, claims, validFrom, validUntil });
       setSuccess("Credential issued.");
       setTimeout(() => router.push("/"), 450);
     } catch (err) {
       const message =
         err instanceof Error ? err.message : "Failed to issue credential";
       setError(message);
-    } 
+    }
   }
 
   return (
     <div className="mx-auto max-w-4xl px-4 pb-8 pt-6 md:px-6 lg:px-8">
       <section className="rounded-2xl border border-border bg-white p-6">
-        <h1 className="text-2xl md:text-3xl font-liberation-serif text-text">
-          Issue Credential
-        </h1>
+        <div className="flex items-center justify-between">
+          <h1 className="text-2xl md:text-3xl font-liberation-serif text-text">
+            Issue Credential
+          </h1>
+          <Link href="/" className="btn btn-outline">
+            ← Back{" "}
+            <span className="hidden min-[400px]:inline-block">
+              to Dashboard
+            </span>
+          </Link>
+        </div>
+
         <p className="mt-2 text-sm font-liberation-serif text-ink">
           Define credential type and claims JSON. Signature is handled by
           backend.
@@ -195,12 +204,17 @@ const loading = issueMutation.isPending;
 
           <button
             type="submit"
-            className="w-full rounded-full bg-text px-5 py-2.5 text-sm font-semibold text-background hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50 inline-flex items-center justify-center gap-2"
+            className="w-full rounded-full bg-text px-5 py-2.5 text-sm font-semibold text-background cursor-pointer hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50 inline-flex items-center justify-center gap-2"
             disabled={loading}
           >
             <FileSignature size={16} />
             {loading ? "Issuing..." : "Issue Credential"}
           </button>
+          {!isOnline ? (
+            <div className="rounded-xl border border-[#efcdcd] bg-[#fff4f4] p-3 text-sm text-[#b53f3f]">
+              Issuing requires internet connection.
+            </div>
+          ) : null}
         </form>
       </section>
     </div>

@@ -7,8 +7,10 @@
 - wallet sign during share and verify both issuer and wallet
 - GraphQL
 - Deleted credentials verification should fail (may be have a revocation list with the cred IDs)
-- Search and filtering are currently client-side and operate on the in-memory credential list.
-- Pagination is not implemented yet.
+- Search is currently client-side
+- Pagination
+- Validate the proof's created timestamp in /credentials/verify
+- TryRepairJSON in front end single quote->double quotes format
 ---
 # Completed
 

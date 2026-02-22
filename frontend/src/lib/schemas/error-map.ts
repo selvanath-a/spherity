@@ -11,10 +11,14 @@ export function zodIssuesToIssueFieldErrors(issues: z.core.$ZodIssue[]): IssueFi
   const out: IssueFieldErrors = {};
   for (const issue of issues) {
     const key = issue.path[0];
-    if (key === "type" && !out.type) out.type = issue.message;
-    if (key === "validFrom" && !out.validFrom) out.validFrom = issue.message;
-    if (key === "validUntil" && !out.validUntil) out.validUntil = issue.message;
-    if (key === "claimsJson" && !out.claimsJson) out.claimsJson = issue.message;
+    switch(key) {
+      case "type":
+      case "validFrom":
+      case "validUntil":
+      case "claimsJson":
+        if (!out[key]) out[key] = issue.message;
+        break;
+    }
   }
   return out;
 }

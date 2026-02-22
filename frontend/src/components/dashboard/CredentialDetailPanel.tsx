@@ -2,7 +2,7 @@
 
 import { Credential } from "@/lib/schemas/credential";
 import { getDisplayType } from "@/utils";
-import { ExternalLink, LayoutList } from "lucide-react";
+import { ExternalLink, LayoutList, X } from "lucide-react";
 import Link from "next/link";
 import { CredentialMeta } from "../credential-details/CredentialMeta";
 import { CredentialProof } from "../credential-details/CredentialProof";
@@ -14,6 +14,7 @@ type CredentialDetailPanelProps = {
   onVerify: (id: string) => void | Promise<void>;
   onShare: (id: string) => void;
   onDelete: (id: string) => void | Promise<void>;
+  onClose?: () => void;
 };
 
 export function CredentialDetailPanel({
@@ -21,6 +22,7 @@ export function CredentialDetailPanel({
   onVerify,
   onShare,
   onDelete,
+  onClose,
 }: CredentialDetailPanelProps) {
   return (
     <div className="rounded-2xl border border-border bg-white p-6 lg:sticky lg:top-6">
@@ -29,13 +31,25 @@ export function CredentialDetailPanel({
           Credential Details
         </h2>
         {credential ? (
-          <Link
-            href={`/credentials/${credential.id}`}
-            className="cursor-pointer rounded-full border border-border p-2 text-ink hover:text-text hover:bg-surface transition"
-            aria-label="Open credential detail page"
-          >
-            <ExternalLink size={14} />
-          </Link>
+          <div className="flex items-center gap-2">
+            <Link
+              href={`/credentials/${credential.id}`}
+              className="cursor-pointer rounded-full border border-border p-2 text-ink hover:text-text hover:bg-surface transition"
+              aria-label="Open credential detail page"
+            >
+              <ExternalLink size={14} />
+            </Link>
+            {onClose ? (
+              <button
+                type="button"
+                onClick={onClose}
+                className="cursor-pointer rounded-full border border-border p-2 text-ink hover:text-text hover:bg-surface transition"
+                aria-label="Close credential details"
+              >
+                <X size={14} />
+              </button>
+            ) : null}
+          </div>
         ) : null}
       </div>
       <div className="mt-4 border-t border-border" />

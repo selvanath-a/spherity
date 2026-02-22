@@ -25,7 +25,8 @@ export function SummaryRow({ totalCredentials, walletId }: SummaryRowProps) {
       <div className="rounded-md border border-border p-5 flex items-center justify-between bg-white">
         <div>
           <span className="text-xs text-ink font-pt-serif font-bold">WALLET ID</span>
-          <div className="rounded-xl bg-surface-light font-nimbus-mono text-xs font-light p-2 my-2">
+          <div className="rounded-xl bg-surface-light font-nimbus-mono text-xs font-light p-2 my-2"
+          title={walletId}>
             {truncateMiddle(walletId)}
           </div>
         </div>

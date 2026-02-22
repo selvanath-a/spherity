@@ -32,7 +32,7 @@ export default function CredentialDetailPage({
           {error instanceof Error ? error.message : "Credential not found"}
         </div>
         <Link href="/" className="btn btn-outline">
-          ← Back to Dashboard
+          ← Back <span className="hidden min-[362px]:inline-block">to Dashboard</span>
         </Link>
       </div>
     );
@@ -45,7 +45,7 @@ export default function CredentialDetailPage({
           Credential Details
         </h1>
         <Link href="/" className="btn btn-outline font-liberation-serif ">
-          ← Back to Dashboard
+          ← Back <span className="hidden min-[362px]:inline-block">to Dashboard</span>
         </Link>
       </div>
 
