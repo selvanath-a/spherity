@@ -2,13 +2,8 @@ import type { Metadata } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
 import { HeaderBar } from "@/components/HeaderBar";
+import { OfflineBanner } from "@/components/OfflineBanner";
 import { QueryProvider } from "@/components/providers/QueryProvider";
-import dynamic from "next/dynamic";
-
-const OfflineBanner = dynamic(
-  () => import("@/components/OfflineBanner").then((m) => m.OfflineBanner),
-  { ssr: false },
-);
 const ptSerif = localFont({
   src: [
     {
