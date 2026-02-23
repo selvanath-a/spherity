@@ -15,5 +15,6 @@
 ---
 # Completed
 
+- Loading skeleton in cred/[id] endpoint
 - Custom decorator WalletId in HttpRequest
 - Validate DTO

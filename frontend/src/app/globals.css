@@ -9,7 +9,7 @@
   --border: #e2dcd4;
   --accent: #b78b3a;
   --accent-strong: #9f7427;
-  --offline: #2a2622;
+  --offline-banner: #2a2622;
   --header-bg: #fdfcf8;
   --dashboard-bg: #f5ede2;
   --placeholder-text: #757575;
@@ -29,7 +29,7 @@
   --color-border: var(--border);
   --color-accent: var(--accent);
   --color-accent-strong: var(--accent-strong);
-  --color-offline-banner: var(--offline);
+  --color-offline-banner: var(--offline-banner);
   --color-header: var(--header-bg);
   --color-dashboard: var(--dashboard-bg);
   --color-placeholder-text: var(--placeholder-text);

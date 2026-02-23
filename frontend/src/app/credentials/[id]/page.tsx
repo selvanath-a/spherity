@@ -22,7 +22,35 @@ export default function CredentialDetailPage({
   const { data: credential, isLoading, error } = useCredentialQuery(id);
 
   if (isLoading) {
-    return <div className="loading">Loading credential...</div>;
+    return (
+      <div className="mx-auto w-full max-w-6xl px-4 pb-8 pt-6 md:px-6 lg:px-8">
+        <div className="mb-4 flex items-center justify-between gap-3">
+          <div className="h-9 w-52 animate-pulse rounded-lg bg-surface" />
+          <div className="h-10 w-40 animate-pulse rounded-full bg-surface" />
+        </div>
+
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
+          <section className="lg:col-span-7 rounded-2xl border border-border bg-white p-6">
+            <div className="h-8 w-60 animate-pulse rounded-md bg-surface" />
+            <div className="mt-5 space-y-3">
+              <div className="h-4 w-48 animate-pulse rounded bg-surface" />
+              <div className="h-4 w-56 animate-pulse rounded bg-surface" />
+              <div className="h-4 w-44 animate-pulse rounded bg-surface" />
+            </div>
+
+            <div className="mt-6 border-t border-border pt-6 space-y-3">
+              <div className="h-4 w-36 animate-pulse rounded bg-surface" />
+              <div className="h-20 w-full animate-pulse rounded-xl bg-surface" />
+            </div>
+          </section>
+
+          <section className="lg:col-span-5 rounded-2xl border border-border bg-white p-6">
+            <div className="h-4 w-24 animate-pulse rounded bg-surface" />
+            <div className="mt-3 h-90 w-full animate-pulse rounded-xl bg-surface" />
+          </section>
+        </div>
+      </div>
+    );
   }
 
   if (error || !credential) {
@@ -32,7 +60,8 @@ export default function CredentialDetailPage({
           {error instanceof Error ? error.message : "Credential not found"}
         </div>
         <Link href="/" className="btn btn-outline">
-          ← Back <span className="hidden min-[362px]:inline-block">to Dashboard</span>
+          ← Back{" "}
+          <span className="hidden min-[362px]:inline-block">to Dashboard</span>
         </Link>
       </div>
     );
@@ -45,7 +74,8 @@ export default function CredentialDetailPage({
           Credential Details
         </h1>
         <Link href="/" className="btn btn-outline font-liberation-serif ">
-          ← Back <span className="hidden min-[362px]:inline-block">to Dashboard</span>
+          ← Back{" "}
+          <span className="hidden min-[362px]:inline-block">to Dashboard</span>
         </Link>
       </div>
 
