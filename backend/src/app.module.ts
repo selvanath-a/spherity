@@ -2,7 +2,7 @@ import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { CredentialModule } from './credential/credential.module';
-import { WalletMiddleware } from './wallet/wallet.middleware';
+import { WalletMiddleware } from './common/middleware/wallet/wallet.middleware';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
 

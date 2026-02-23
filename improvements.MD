@@ -11,6 +11,7 @@
 - Pagination
 - Validate the proof's created timestamp in /credentials/verify
 - TryRepairJSON in front end single quote->double quotes format
+- Fetch Wallet Id from dedicated endpoint
 ---
 # Completed
 
